@@ -81,8 +81,9 @@ select test.ok(public.share_perio_save('not-a-session', null, '{"exam_date":"202
 select test.ok(not exists (select 1 from public.perio_exams where contributed_by is not null), 'nothing was written by the refused calls');
 
 -- ---------------------------------------------------------------- charting through the link
-select public.share_perio_save(:'a_sess', null, jsonb_build_object('exam_date', current_date, 'examiner_name', 'Somebody Else', 'source', 'self',
-  'contributed_by', :'a2_ctr', 'notes', 'initial chart'),
+select test.ok(public.share_perio_save(:'a_sess', null, jsonb_build_object('exam_date', current_date, 'examiner_name', 'Somebody Else', 'source', 'self',
+  'contributed_by', :'a2_ctr', 'notes', 'forged'), '[{"tooth":16,"pd":[3,2,6,4,3,7]}]'::jsonb) ->> 'status' = 'invalid', 'a chart carrying an examiner, source or author key is refused (0033)');
+select public.share_perio_save(:'a_sess', null, jsonb_build_object('exam_date', current_date, 'notes', 'initial chart'),
   '[{"tooth":16,"pd":[3,2,6,4,3,7],"gm":[0,-1,-2,0,null,1],"bop":[false,false,true,false,false,true],"mobility":2,"furcation_b":2},
     {"tooth":26,"pd":[4,4,5,4,4,4]},{"tooth":46,"missing":true}]'::jsonb) as r1 \gset
 select (:'r1'::jsonb ->> 'id') as d1, (:'r1'::jsonb ->> 'status') as d1_status \gset

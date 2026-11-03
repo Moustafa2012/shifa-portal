@@ -9,6 +9,8 @@ export type FormState = {
   ok?: boolean; error?: string; message?: string; data?: Record<string, string>; redirectTo?: string;
   /** asks the user to confirm and resubmit (e.g. a probable duplicate): a checkbox `name` is added to the form */
   confirm?: { name: string; label: string };
+  /** the `name` of the input the error belongs to: the message is also shown under that field, which takes the focus */
+  field?: string;
 } | undefined;
 export type FormAction = (prev: FormState, fd: FormData) => Promise<FormState>;
 
@@ -19,6 +21,18 @@ export function SubmitButton({ children, className = "btn primary", pending: pen
       {pending && <span className="spinner" aria-hidden="true" />}{pending && pendingText ? pendingText : children}
     </button>
   );
+}
+
+function clearFieldErrors(form: HTMLFormElement, field?: string) {
+  form.querySelectorAll<HTMLElement>(field ? `[data-field-error="${CSS.escape(field)}"]` : "[data-field-error]").forEach((n) => {
+    const id = n.id;
+    n.remove();
+    form.querySelectorAll<HTMLElement>(`[aria-describedby~="${CSS.escape(id)}"]`).forEach((i) => {
+      const rest = (i.getAttribute("aria-describedby") ?? "").split(" ").filter((x) => x && x !== id).join(" ");
+      if (rest) i.setAttribute("aria-describedby", rest); else i.removeAttribute("aria-describedby");
+      i.removeAttribute("aria-invalid");
+    });
+  });
 }
 
 /** Wraps a server action: shows its error/success message and clears the form after a successful save. */
@@ -37,6 +51,30 @@ export function ActionForm({
   useEffect(() => {
     if (state?.ok && resetOnSuccess && !state.redirectTo) ref.current?.reset();
   }, [state, resetOnSuccess]);
+  // an error that names its field is also written under that field (what was typed is kept), marked invalid, and the field takes focus
+  useEffect(() => {
+    const form = ref.current;
+    if (!form) return;
+    clearFieldErrors(form);
+    if (!state?.error || !state.field) return;
+    const named = form.elements.namedItem(state.field);
+    const first = named instanceof RadioNodeList ? named[0] : named;
+    if (!(first instanceof HTMLElement)) return;
+    const input = first instanceof HTMLInputElement && first.type === "hidden"
+      ? (first.closest(".field")?.querySelector<HTMLElement>("input:not([type=hidden]), select, textarea") ?? first) : first;
+    const wrap = input.closest(".field") ?? input.parentElement;
+    if (!wrap) return;
+    const msg = document.createElement("p");
+    msg.className = "field-error"; msg.setAttribute("data-field-error", state.field);
+    msg.id = `${id ?? "f"}-${state.field}-err`; msg.textContent = state.error;
+    wrap.appendChild(msg);
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-describedby", [input.getAttribute("aria-describedby"), msg.id].filter(Boolean).join(" "));
+    if (input.offsetParent !== null) input.focus({ preventScroll: false });
+    const clear = () => clearFieldErrors(form, state.field);
+    form.addEventListener("input", clear, { once: true });
+    return () => form.removeEventListener("input", clear);
+  }, [state, id]);
   return (
     <form action={formAction} ref={ref} className={className} id={id}>
       {children}

@@ -114,7 +114,9 @@ select public.share_dental(:'sess') as d0 \gset
 select test.ok(jsonb_array_length(:'d0'::jsonb -> 'plans') >= 2 and jsonb_array_length(:'d0'::jsonb -> 'my_costs') = 0
                and position('1500' in (:'d0'::jsonb -> 'plans')::text) = 0,
   'the dentist sees the current plans, without the patient''s costs');
-select public.share_contribute_treatment_plan(:'sess', '{"title":"Dentist plan","status":"accepted"}',
+select test.ok(public.share_contribute_treatment_plan(:'sess', '{"title":"Forged plan","status":"accepted"}', '[{"catalog_code":"root_canal","teeth":[46]}]') ->> 'status' = 'invalid',
+  'a plan payload carrying a status key is refused (0033): a clinician cannot present a plan as accepted');
+select public.share_contribute_treatment_plan(:'sess', '{"title":"Dentist plan"}',
   jsonb_build_array(jsonb_build_object('catalog_code', 'root_canal', 'teeth', jsonb_build_array(46)),
                     jsonb_build_object('catalog_code', 'implant_placement', 'teeth', jsonb_build_array(18)))) as dp \gset
 select (:'dp'::jsonb ->> 'id') as dpid \gset

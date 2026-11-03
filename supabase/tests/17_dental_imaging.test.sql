@@ -105,15 +105,15 @@ select public.share_contribute_dental_exam(:'d_sess', jsonb_build_object('exam_d
   jsonb_build_array(jsonb_build_object('tooth', 16, 'kind', 'bone_loss', 'evidence', 'radiographic', 'imaging_id', :'pano'))) as r1 \gset
 select test.ok(:'r1'::jsonb ->> 'status' = 'ok' and (select imaging_id = :'pano'::uuid and contributed_by is not null from public.dental_findings where id =
   (select id from public.dental_findings where tooth = 16 and kind = 'bone_loss' and patient_id = :'pi')), 'the dentist links a finding to the panoramic through the link');
-select test.throws(format($$select public.share_contribute_dental_exam(%L, '{"exam_date":"2024-01-01"}', '[]', %L::jsonb)$$, :'d_sess',
+select test.throws(format($$select public.share_contribute_dental_exam(%L, jsonb_build_object('exam_date', current_date), '[]', %L::jsonb)$$, :'d_sess',
   jsonb_build_array(jsonb_build_object('tooth', 16, 'kind', 'bone_loss', 'evidence', 'radiographic', 'imaging_id', :'other_img'))::text),
   'imaging_invalid', 'a doctor cannot link another patient''s image');
 select id as card_img from public.imaging_studies where patient_id = :'pi' and specialty_id = :'s_card' \gset
-select test.throws(format($$select public.share_contribute_dental_exam(%L, '{"exam_date":"2024-01-01"}', '[]', %L::jsonb)$$, :'d_sess',
+select test.throws(format($$select public.share_contribute_dental_exam(%L, jsonb_build_object('exam_date', current_date), '[]', %L::jsonb)$$, :'d_sess',
   jsonb_build_array(jsonb_build_object('tooth', 16, 'kind', 'bone_loss', 'evidence', 'radiographic', 'imaging_id', :'card_img'))::text),
   'imaging_invalid', 'a doctor cannot link an image of the patient that the link does not show');
 select id as old_img from public.imaging_studies where patient_id = :'pi' and teeth = array[46]::smallint[] \gset
-select test.throws(format($$select public.share_contribute_dental_exam(%L, '{"exam_date":"2024-01-01"}', '[]', %L::jsonb)$$, :'d_sess',
+select test.throws(format($$select public.share_contribute_dental_exam(%L, jsonb_build_object('exam_date', current_date), '[]', %L::jsonb)$$, :'d_sess',
   jsonb_build_array(jsonb_build_object('tooth', 46, 'kind', 'bone_loss', 'evidence', 'radiographic', 'imaging_id', :'old_img'))::text),
   'imaging_invalid', 'nor one outside the dates of the link');
 select test.ok(public.share_dental_imaging_extras(:'d_sess') -> 'finding_images' ->>
@@ -127,8 +127,8 @@ select public.share_contribute(:'d_sess', 'imaging_studies', jsonb_build_object(
   'bone_levels', jsonb_build_object('s5', jsonb_build_object('level', 'apical_third', 'pattern', 'vertical')), 'test_order_id', null)) as r2 \gset
 select test.ok(:'r2'::jsonb ->> 'status' = 'ok' and (select bone_levels -> 's5' ->> 'pattern' = 'vertical' and contributed_by is not null from public.imaging_studies where id = (:'r2'::jsonb ->> 'id')::uuid),
   'a doctor records the bone reading with a study');
-select test.throws(format($$select public.share_contribute(%L, 'imaging_studies', jsonb_build_object('modality', 'panoramic', 'performed_on', current_date, 'bone_levels', '{"s9":{"level":"none"}}'::jsonb))$$, :'d_sess'),
-  'check constraint|violates', 'a doctor''s bad bone reading is refused');
+select test.ok((select public.share_contribute(:'d_sess', 'imaging_studies', jsonb_build_object('modality', 'panoramic', 'performed_on', current_date, 'bone_levels', '{"s9":{"level":"none"}}'::jsonb))
+                 ) ->> 'status' = 'invalid', 'a doctor''s bad bone reading is refused');
 
 -- ---------------------------------------------------------------- a study fulfils the request
 select test.as_user(:'alice'::uuid);
