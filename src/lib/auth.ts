@@ -55,6 +55,12 @@ export function getTheme(): "light" | "dark" | null {
   return v === "dark" || v === "light" ? v : null;
 }
 
+/** How the signed-in app's side rail behaves: "open" (expanded), "closed" (icons only) or "hover" (icons, widening on hover). Set by the rail's menu. */
+export function getSidebarMode(): "hover" | "open" | "closed" {
+  const v = cookies().get("sidebar")?.value;
+  return v === "open" || v === "closed" ? v : "hover";
+}
+
 /** Turns database / API errors into a short message the user can act on. Never echoes raw SQL details. */
 export function explainError(e: unknown, t: T): string {
   const err = e as { code?: string; message?: string } | null;

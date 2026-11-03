@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Activity, AlertTriangle, ArrowLeftRight, CalendarDays, ClipboardList, FileText, FlaskConical, FolderHeart, FolderOpen, HeartPulse, History, Home, Layers,
@@ -33,24 +33,59 @@ function useNav(nav: Nav) {
   return { path, tab, active: activeProduct(nav, path) };
 }
 
-type Behaviour = "hover" | "open" | "closed";
-const BEHAVIOUR_KEY = "shifa-sidebar";
+export type Behaviour = "hover" | "open" | "closed";
+/** Cookie holding the sidebar mode (read by getSidebarMode on the server, so the first paint already has the right width: no flash). */
+const BEHAVIOUR_COOKIE = "sidebar";
+const LEGACY_KEY = "shifa-sidebar";
+const isBehaviour = (v: unknown): v is Behaviour => v === "hover" || v === "open" || v === "closed";
 
 /**
- * The product rail (Studio's Sidebar): icons in groups divided by separators, 48px wide; it widens to 208px on hover
- * or keyboard focus (overlaying the page), or stays open / closed — the choice is in the footer, as in Studio.
+ * The product rail (Studio's Sidebar): icons in groups divided by separators. Three modes, chosen in the footer menu:
+ * expanded (13rem, labels), collapsed (3rem, icons with tooltips) and expand on hover (3rem at rest; on hover or keyboard
+ * focus it widens). The rail is a column of the shell, never an overlay: when it widens, the menu and the page move aside.
  */
-export function ShellRail({ nav, label, behaviourLabels }: { nav: Nav; label: string; behaviourLabels?: { title: string; open: string; closed: string; hover: string } }) {
+export function ShellRail({ nav, label, behaviourLabels, initialMode = "hover" }: { nav: Nav; label: string; behaviourLabels?: { title: string; open: string; closed: string; hover: string }; initialMode?: Behaviour }) {
   const { active } = useNav(nav);
-  const [mode, setMode] = useState<Behaviour>("hover");
+  const [mode, setMode] = useState<Behaviour>(initialMode);
   const [menu, setMenu] = useState(false);
-  useEffect(() => {
-    let m: Behaviour = "hover";
-    try { const v = localStorage.getItem(BEHAVIOUR_KEY); if (v === "open" || v === "closed") m = v; } catch { /* storage may be blocked */ }
-    setMode(m);
-  }, []);
+  const [place, setPlace] = useState<{ bottom: number; start: number } | null>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
   useEffect(() => { document.documentElement.dataset.sidebar = mode; }, [mode]);
-  const choose = (m: Behaviour) => { setMode(m); setMenu(false); try { localStorage.setItem(BEHAVIOUR_KEY, m); } catch { /* ignore */ } };
+  // a choice made before the cookie existed lived in localStorage: carry it over once
+  useEffect(() => {
+    try {
+      const old = localStorage.getItem(LEGACY_KEY);
+      if (old === null) return;
+      localStorage.removeItem(LEGACY_KEY);
+      if (!document.cookie.split("; ").some((c) => c.startsWith(`${BEHAVIOUR_COOKIE}=`)) && isBehaviour(old)) { setMode(old); writeCookie(old); }
+    } catch { /* storage may be blocked */ }
+  }, []);
+  const choose = (m: Behaviour) => { setMode(m); setMenu(false); writeCookie(m); trigger.current?.focus(); };
+
+  // the menu is drawn in a portal (the rail clips its content), above the button; it closes on Escape and on a click outside
+  useEffect(() => {
+    if (!menu) return;
+    const r = trigger.current?.getBoundingClientRect();
+    if (r) setPlace({ bottom: window.innerHeight - r.top + 4, start: document.dir === "rtl" ? window.innerWidth - r.right : r.left });
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const n = e.target as Node;
+      if (!pop.current?.contains(n) && !trigger.current?.contains(n)) setMenu(false);
+    };
+    document.addEventListener("mousedown", onDown); document.addEventListener("touchstart", onDown);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("touchstart", onDown); };
+  }, [menu]);
+  useEffect(() => { if (menu && place) (pop.current?.querySelector<HTMLElement>('[aria-checked="true"]') ?? pop.current?.querySelector<HTMLElement>('[role="menuitemradio"]'))?.focus(); }, [menu, place]);
+  const onMenuKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setMenu(false); trigger.current?.focus(); return; }
+    const list = Array.from(pop.current?.querySelectorAll<HTMLElement>('[role="menuitemradio"]') ?? []);
+    const i = list.indexOf(document.activeElement as HTMLElement);
+    if (e.key === "ArrowDown") { e.preventDefault(); list[(i + 1) % list.length]?.focus(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); list[(i - 1 + list.length) % list.length]?.focus(); }
+    else if (e.key === "Home") { e.preventDefault(); list[0]?.focus(); }
+    else if (e.key === "End") { e.preventDefault(); list[list.length - 1]?.focus(); }
+    else if (e.key === "Tab") setMenu(false);
+  };
   const link = (p: ShellProduct) => (
     <Link key={p.key} href={p.href} className="rail-link" aria-current={active?.key === p.key ? "page" : undefined} title={p.label} data-product={p.key}>
       <ItemIcon it={{ icon: p.icon }} size={18} /><span className="rail-label">{p.label}</span>
@@ -63,7 +98,7 @@ export function ShellRail({ nav, label, behaviourLabels }: { nav: Nav; label: st
     if (last && (last[0].group ?? 0) === g) last.push(p); else groups.push([p]);
   }
   return (
-    <nav className="rail no-print" aria-label={label}>
+    <nav className={`rail no-print${menu ? " menu-open" : ""}`} aria-label={label} data-mode={mode}>
       <div className="rail-in">
         {nav.home && (
           <>
@@ -85,18 +120,19 @@ export function ShellRail({ nav, label, behaviourLabels }: { nav: Nav; label: st
           {nav.footer.map(link)}
           {behaviourLabels && (
             <div className="rail-behaviour">
-              <button type="button" className="rail-link" aria-haspopup="menu" aria-expanded={menu} title={behaviourLabels.title} onClick={() => setMenu((v) => !v)}>
+              <button ref={trigger} type="button" className="rail-link" aria-haspopup="menu" aria-expanded={menu} title={behaviourLabels.title} data-testid="rail-behaviour" onClick={() => setMenu((v) => !v)}>
                 <PanelLeft size={18} aria-hidden="true" /><span className="rail-label">{behaviourLabels.title}</span>
               </button>
-              {menu && (
-                <div className="menu dm rail-behaviour-menu" role="menu" aria-label={behaviourLabels.title}>
+              {menu && createPortal(
+                <div ref={pop} className="menu dm rail-behaviour-menu" role="menu" aria-label={behaviourLabels.title} onKeyDown={onMenuKey}
+                  style={place ? { insetBlockEnd: place.bottom, insetInlineStart: place.start } : { visibility: "hidden" }}>
                   <div className="dm-label" role="presentation">{behaviourLabels.title}</div>
                   {([["open", behaviourLabels.open], ["closed", behaviourLabels.closed], ["hover", behaviourLabels.hover]] as const).map(([m, l]) => (
-                    <button key={m} type="button" role="menuitemradio" aria-checked={mode === m} className="dm-item dm-radio-item" onClick={() => choose(m)}>
+                    <button key={m} type="button" role="menuitemradio" aria-checked={mode === m} className="dm-item dm-radio-item" data-mode={m} onClick={() => choose(m)}>
                       <span className={`dm-radio${mode === m ? " on" : ""}`} aria-hidden="true" />{l}
                     </button>
                   ))}
-                </div>
+                </div>, document.body,
               )}
             </div>
           )}
@@ -104,6 +140,10 @@ export function ShellRail({ nav, label, behaviourLabels }: { nav: Nav; label: st
       </div>
     </nav>
   );
+}
+
+function writeCookie(m: Behaviour) {
+  try { document.cookie = `${BEHAVIOUR_COOKIE}=${m}; path=/; max-age=31536000; samesite=lax`; } catch { /* cookies may be blocked */ }
 }
 
 function MenuGroups({ product, path, tab, onNavigate }: { product: ShellProduct; path: string; tab: string | null; onNavigate?: () => void }) {

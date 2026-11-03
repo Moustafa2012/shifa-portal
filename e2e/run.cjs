@@ -2982,22 +2982,39 @@ const submit = async (scope, name) => { await scope.getByRole("button", { name, 
   });
 
   // ---------------------------------------------------------------- responsive + RTL
-  await step("mobile viewport (Arabic, RTL): no horizontal scroll on key pages", async () => {
+  // every page of the signed-in app on a phone: no sideways scroll, the content column uses the width, and the top bar is one row that sits above the page
+  const PHONE_PAGES = ["", "/dental", "/dental?tab=perio", "/dental?tab=treatment", "/dental?tab=care", "/medications", "/reminders", "/emergency", "/labs", "/labs?view=compare", "/timeline", "/sharing/new", "/documents", "/profile", "/vitals", "/specialties", "/members", "ACCOUNT", "PATIENTS"];
+  const phoneCheck = async (mp, lang) => {
+    for (const p of PHONE_PAGES) {
+      const url = p === "ACCOUNT" ? `${BASE}/account` : p === "PATIENTS" ? `${BASE}/patients` : `${BASE}/patients/${pid}${p}`;
+      const label = p || "/";
+      const r = await mp.goto(url);
+      assert(r.status() === 200, `${label} => ${r.status()}`);
+      assert((await mp.locator("html").getAttribute("dir")) === (lang === "ar" ? "rtl" : "ltr"), "direction");
+      const over = await mp.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      const culprits = over > 1 ? await mp.evaluate(() => [...document.querySelectorAll("body *")].filter((el) => {
+        const r = el.getBoundingClientRect();
+        if (!(r.width > 0 && (r.right > document.documentElement.clientWidth + 1 || r.left < -1))) return false;
+        for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) { const o = getComputedStyle(a).overflowX; if ((o !== "visible" && o !== "clip") || a.matches("details:not([open])")) return false; }
+        return true;
+      }).slice(0, 4).map((el) => `${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}.${String(el.className).split(" ")[0]}`)) : [];
+      assert(over <= 1, `horizontal overflow of ${over}px on ${label} (${culprits.join(", ")})`);
+      const g = await mp.evaluate(() => {
+        const vw = document.documentElement.clientWidth, box = (s) => { const el = document.querySelector(s); if (!el) return null; const r = el.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom, w: r.width, h: r.height }; };
+        return { vw, content: box(".shell-content"), top: box(".shell-top"), below: box(".shell-below"), clipped: [...document.querySelectorAll(".shell-top *")].filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.right > vw + 1 || r.left < -1) && !el.closest(".crumbs"); }).length };
+      });
+      assert(g.content && g.content.w > g.vw * 0.7, `the content column is ${g.content && Math.round(g.content.w)}px of ${g.vw}px on ${label}`);
+      assert(g.top && g.top.h <= 49 && Math.abs(g.top.w - g.vw) <= 1 && g.top.t === 0, `the top bar is not one full-width row on ${label}: ${JSON.stringify(g.top)}`);
+      assert(g.below.t >= g.top.b - 0.5, `the top bar overlaps the page on ${label}`);
+      assert(g.clipped === 0, `${g.clipped} top bar items fall outside the screen on ${label}`);
+    }
+  };
+  await step("mobile viewport (Arabic, RTL, 390px): every page lays out, no horizontal scroll, full-width content, one-row top bar", async () => {
     const m = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "ar-SA", timezoneId: "Asia/Riyadh" });
     await m.addCookies([...(await ctx.cookies()).filter((c) => c.name !== "lang"), { name: "lang", value: "ar", url: BASE }]);
     const mp = await m.newPage(); watch(mp, "mobile");
-    for (const p of ["", "/profile", "/vitals", "/labs", "/specialties", "/dental", "/dental?tab=treatment", "/dental?tab=care", "/medications", "/sharing/new", "/documents", "/timeline", "/reminders", "/emergency", "/members", "/labs?view=compare"]) {
-      const r = await mp.goto(`${BASE}/patients/${pid}${p}`);
-      assert(r.status() === 200, `${p} => ${r.status()}`);
-      assert((await mp.locator("html").getAttribute("dir")) === "rtl", "rtl");
-      const over = await mp.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      const culprits = over > 1 ? await mp.evaluate(() => [...document.querySelectorAll("body *")].filter((el) => { const r = el.getBoundingClientRect(); return r.width > 0 && (r.right > document.documentElement.clientWidth + 1 || r.left < -1); })
-        .slice(0, 4).map((el) => `${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}.${String(el.className).split(" ")[0]}`)) : [];
-      assert(over <= 1, `horizontal overflow of ${over}px on ${p || "/"} (${culprits.join(", ")})`);
-      if (p === "") await mp.screenshot({ path: path.join(OUT, "mobile-dashboard-ar.png"), fullPage: true });
-      if (p === "/vitals") await mp.screenshot({ path: path.join(OUT, "mobile-vitals-ar.png"), fullPage: true });
-      if (p === "/dental") await mp.screenshot({ path: path.join(OUT, "mobile-dental-ar.png"), fullPage: true });
-    }
+    await phoneCheck(mp, "ar");
+    for (const [p, f] of [["", "mobile-dashboard-ar.png"], ["/vitals", "mobile-vitals-ar.png"], ["/dental", "mobile-dental-ar.png"]]) { await mp.goto(`${BASE}/patients/${pid}${p}`); await mp.screenshot({ path: path.join(OUT, f), fullPage: true }); }
     // small screens: the products open from the menu button; the active product's pages are a strip under the top bar
     await mp.goto(`${BASE}/patients/${pid}/vitals`);
     await mp.locator(".shell-subnav").getByRole("link", { name: "التحاليل المخبرية" }).waitFor();
@@ -3005,6 +3022,135 @@ const submit = async (scope, name) => { await scope.getByRole("button", { name, 
     await mp.locator(".drawer").getByRole("link", { name: "الملف الأساسي" }).click();
     await mp.waitForURL(/\/profile$/);
     await m.close();
+  });
+
+  await step("mobile viewport (English, LTR, 360px, light and dark): every page lays out the same way", async () => {
+    for (const theme of ["light", "dark"]) {
+      const m = await browser.newContext({ viewport: { width: 360, height: 740 }, locale: "en-GB", timezoneId: "Asia/Riyadh" });
+      await m.addCookies([...(await ctx.cookies()).filter((c) => c.name !== "lang" && c.name !== "theme"), { name: "lang", value: "en", url: BASE }, { name: "theme", value: theme, url: BASE }]);
+      const mp = await m.newPage(); watch(mp, "mobile-en");
+      await phoneCheck(mp, "en");
+      // the search is an icon button on a phone; it opens a box across the top bar, closes on Escape
+      await mp.goto(`${BASE}/patients/${pid}`);
+      assert(!(await mp.locator(".shell-search input").isVisible()), "the search box starts collapsed");
+      await mp.getByRole("button", { name: "Search", exact: true }).click();
+      await mp.locator(".shell-search input").waitFor();
+      await mp.keyboard.press("Escape");
+      await mp.locator(".shell-search input").waitFor({ state: "hidden" });
+      if (theme === "dark") await mp.goto(`${BASE}/patients/${pid}/dental`), await mp.screenshot({ path: path.join(OUT, "mobile-dental-en-dark.png"), fullPage: true });
+      await m.close();
+    }
+  });
+
+  await step("desktop shell: a full-width top bar above the rail, a rail that pushes (never covers) its neighbour, three persistent modes", async () => {
+    const dc = await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: "en-GB", timezoneId: "Asia/Riyadh" });
+    await dc.addCookies((await ctx.cookies()).filter((c) => c.name !== "sidebar"));
+    const dp = await dc.newPage(); watch(dp, "desktop-shell");
+    const box = (sel) => dp.evaluate((s) => { const r = document.querySelector(s).getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top, b: r.bottom, w: r.width, h: r.height }; }, sel);
+    const railW = () => dp.evaluate(() => document.querySelector("nav.rail").getBoundingClientRect().width);
+    // waits until the element's width satisfies ("gt" / "lt" / "eq" the given px): the rail animates for 150ms
+    const settled = async (sel, op, n) => { await dp.waitForFunction(([s, o, v]) => { const w = document.querySelector(s).getBoundingClientRect().width; return o === "gt" ? w > v : o === "lt" ? w < v : Math.abs(w - v) < 1; }, [sel, op, n], { timeout: 3000 }); };
+    await dp.goto(`${BASE}/patients/${pid}/dental`);
+    assert((await dp.locator("html").getAttribute("data-sidebar")) === "hover", "the default mode is expand on hover");
+    // (a) the top bar is the first row, the full width, above the rail and the product menu
+    const top = await box(".shell-top"), rail = await box("nav.rail"), pm = await box("nav.product-menu");
+    assert(top.l === 0 && top.t === 0 && Math.abs(top.w - 1280) <= 1, "the top bar spans the viewport " + JSON.stringify(top));
+    assert(rail.t >= top.b - 0.5 && pm.t >= top.b - 0.5, `the rail and the menu start under the top bar: ${rail.t} / ${pm.t} vs ${top.b}`);
+    assert(Math.abs(rail.w - 48) <= 1, "the rail rests at 3rem, got " + rail.w);
+    assert(Math.abs(rail.h - (800 - top.b)) <= 1, "the rail fills the height under the top bar, got " + rail.h);
+    assert((await dp.locator(".shell-top .shell-brand").count()) === 1, "the brand sits in the top bar");
+    // (b) hover: the rail widens and the product menu moves aside (it is pushed, not covered)
+    await dp.locator('nav.rail a[data-product="follow"]').hover();
+    await settled("nav.rail", "eq", 208);
+    const railOpen = await box("nav.rail"), pmOpen = await box("nav.product-menu");
+    assert(Math.abs(railOpen.w - 208) <= 1, "the hovered rail is 13rem, got " + railOpen.w);
+    assert(Math.abs(pmOpen.l - pm.l) > 100, `the product menu moved from ${pm.l} to ${pmOpen.l}`);
+    assert(railOpen.r <= pmOpen.l + 0.5 || railOpen.l >= pmOpen.r - 0.5, "the expanded rail does not intersect the product menu");
+    assert((await dp.locator("nav.rail .rail-label").first().evaluate((el) => getComputedStyle(el).opacity)) === "1", "labels show when the rail is expanded");
+    await dp.mouse.move(700, 500);
+    await settled("nav.rail", "eq", 48);
+    assert(Math.abs((await box("nav.product-menu")).l - pm.l) <= 1, "the product menu returns when the rail collapses");
+    // keyboard focus expands it as well
+    await dp.keyboard.press("Tab");
+    await dp.locator('nav.rail a[data-product="follow"]').focus();
+    await settled("nav.rail", "eq", 208);
+    await dp.locator('nav.rail a[data-product="follow"]').blur();
+    await settled("nav.rail", "eq", 48);
+    // (c) the three modes: a small menu "Sidebar" with radio items; Escape and an outside click close it; the choice survives a reload (cookie, read by the server)
+    await dp.locator('nav.rail a[data-product="follow"]').hover();
+    await settled("nav.rail", "eq", 208);
+    await dp.getByRole("button", { name: "Sidebar" }).click();
+    const menu = dp.getByRole("menu", { name: "Sidebar" });
+    await menu.waitFor();
+    assert((await menu.getByRole("menuitemradio").count()) === 3, "three radio items");
+    assert((await menu.getByRole("menuitemradio", { name: "Expand on hover" }).getAttribute("aria-checked")) === "true", "hover is the current mode");
+    await dp.keyboard.press("Escape");
+    await menu.waitFor({ state: "hidden" });
+    await dp.getByRole("button", { name: "Sidebar" }).click();
+    await menu.waitFor();
+    await dp.mouse.click(700, 400);
+    await menu.waitFor({ state: "hidden" });
+    const choose = async (name) => { await dp.locator("nav.rail").hover(); await dp.getByRole("button", { name: "Sidebar" }).click(); await dp.getByRole("menuitemradio", { name }).click(); };
+    await choose("Expanded");
+    assert((await dp.locator("html").getAttribute("data-sidebar")) === "open", "expanded");
+    await dp.mouse.move(700, 500); await settled("nav.rail", "eq", 208);
+    await dp.reload();
+    assert((await dp.locator("html").getAttribute("data-sidebar")) === "open", "expanded survives a reload");
+    assert(Math.abs((await railW()) - 208) <= 1, "the expanded rail is 13rem after a reload: " + (await railW()));
+    const pmPushed = await box("nav.product-menu");
+    assert(Math.abs(pmPushed.l - pmOpen.l) <= 1, "expanded: the product menu is pushed by the rail");
+    await choose("Collapsed");
+    await dp.mouse.move(700, 500); await settled("nav.rail", "eq", 48);
+    await dp.reload();
+    assert((await dp.locator("html").getAttribute("data-sidebar")) === "closed", "collapsed survives a reload");
+    await dp.locator("nav.rail").hover(); await dp.waitForTimeout(400);
+    assert(Math.abs((await railW()) - 48) <= 1, "collapsed stays icons-only on hover: " + (await railW()));
+    assert((await dp.locator('nav.rail a[data-product="follow"]').getAttribute("title")) === "Follow-up", "collapsed items carry a tooltip");
+    await choose("Expand on hover");
+    await dp.reload();
+    assert((await dp.locator("html").getAttribute("data-sidebar")) === "hover", "hover survives a reload");
+    // (d) the avatar: a round 1px-bordered picture or initials
+    const av = await dp.locator(".shell-top .navuser-btn .avatar").evaluate((el) => { const r = el.getBoundingClientRect(), c = getComputedStyle(el); return { w: r.width, h: r.height, radius: c.borderRadius, border: c.borderTopWidth, fit: el.querySelector("img") ? getComputedStyle(el.querySelector("img")).objectFit : "initials", text: el.textContent }; });
+    assert(av.w === av.h && av.w >= 28 && av.w <= 32, `the avatar is a ${av.w}x${av.h} square`);
+    assert(av.radius === "50%" && av.border === "1px", `the avatar is round with a 1px border: ${av.radius} / ${av.border}`);
+    assert(av.fit === "initials" ? /^[A-Z?]{1,2}$/.test(av.text) : av.fit === "cover", "initials or a covering picture");
+    // (e) the search box: 32px, the icon inside at the start and clear of the text, grows without moving anything, "/" focuses it
+    const s0 = await dp.evaluate(() => { const w = document.querySelector(".shell-search-wrap").getBoundingClientRect(), b = document.querySelector(".shell-bell").getBoundingClientRect(); return { w: w.width, l: w.left, bell: b.left }; });
+    assert(Math.abs(s0.w - 224) <= 1, "the search box rests at 14rem, got " + s0.w);
+    await dp.locator("body").click({ position: { x: 700, y: 400 } });
+    await dp.keyboard.press("/");
+    assert(await dp.locator(".shell-search input").evaluate((el) => el === document.activeElement), "/ focuses the search box");
+    await dp.waitForTimeout(350);
+    const s1 = await dp.evaluate(() => {
+      const f = document.querySelector(".shell-search").getBoundingClientRect(), i = document.querySelector(".shell-search input"), ic = document.querySelector(".shell-search-icon").getBoundingClientRect(), cs = getComputedStyle(i), ir = i.getBoundingClientRect();
+      const wrap = document.querySelector(".shell-search-wrap").getBoundingClientRect(), b = document.querySelector(".shell-bell").getBoundingClientRect();
+      return { focusW: f.width, h: ir.height, iconInside: ic.left >= ir.left && ic.right <= ir.right, textStart: ir.left + parseFloat(cs.paddingLeft), iconRight: ic.right, wrapW: wrap.width, wrapL: wrap.left, bell: b.left, border: cs.borderTopWidth };
+    });
+    assert(Math.abs(s1.h - 32) <= 1, "the input is 32px high, got " + s1.h);
+    assert(s1.iconInside && s1.textStart >= s1.iconRight, `the icon overlaps the text (icon ends ${s1.iconRight}, text starts ${s1.textStart})`);
+    assert(Math.abs(s1.focusW - 352) <= 2, "the focused box is 22rem, got " + s1.focusW);
+    assert(s1.wrapW === s0.w && s1.wrapL === s0.l && s1.bell === s0.bell, "growing on focus moves nothing around it");
+    await dp.screenshot({ path: path.join(OUT, "desktop-shell-search-focus.png"), clip: { x: 0, y: 0, width: 1280, height: 60 } });
+    await dp.mouse.move(700, 500);
+    await dp.screenshot({ path: path.join(OUT, "desktop-shell-en.png") });
+    // the same in Arabic: the rail is on the right, the icon at the start (right), the rail still pushes the menu
+    await dc.addCookies([{ name: "lang", value: "ar", url: BASE }]);
+    await dp.goto(`${BASE}/patients/${pid}/dental`);
+    assert((await dp.locator("html").getAttribute("dir")) === "rtl", "rtl");
+    const rr = await box("nav.rail"), rp = await box("nav.product-menu"), rt = await box(".shell-top");
+    assert(Math.abs(rr.r - 1280) <= 1 && rp.r <= rr.l + 1 && rr.t >= rt.b - 0.5, "RTL: the rail is at the start (right), under the top bar, the menu next to it");
+    await dp.locator('nav.rail a[data-product="follow"]').hover();
+    await settled("nav.rail", "eq", 208);
+    const rr2 = await box("nav.rail"), rp2 = await box("nav.product-menu");
+    assert(Math.abs(rp2.r - rp.r) > 100 && rp2.r <= rr2.l + 1, "RTL: the menu is pushed away from the widened rail");
+    await dp.mouse.move(600, 500);
+    await dp.locator("body").click({ position: { x: 600, y: 400 } });
+    await dp.keyboard.press("/");
+    await dp.waitForTimeout(350);
+    const sr = await dp.evaluate(() => { const i = document.querySelector(".shell-search input"), ic = document.querySelector(".shell-search-icon").getBoundingClientRect(), cs = getComputedStyle(i), ir = i.getBoundingClientRect(); return { iconLeft: ic.left, iconRight: ic.right, textStart: ir.right - parseFloat(cs.paddingRight), boxRight: ir.right }; });
+    assert(sr.iconRight <= sr.boxRight && sr.iconLeft >= sr.textStart - 0.5, `RTL: the icon is at the start and clear of the text (${JSON.stringify(sr)})`);
+    await dp.screenshot({ path: path.join(OUT, "desktop-shell-ar.png") });
+    await dc.close();
   });
 
   await step("desktop screenshots for review", async () => {

@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./supabase-tokens.css";
 import "./globals.css";
 import { i18n } from "@/lib/i18n";
-import { getTheme, getTz } from "@/lib/auth";
+import { getSidebarMode, getTheme, getTz } from "@/lib/auth";
 import { TzSetter } from "@/components/ui/client";
 import { Suspense } from "react";
 import { TopProgress } from "@/components/TopProgress";
@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const { lang, dir, t } = i18n();
   const theme = getTheme();
   return (
-    <html lang={lang} dir={dir} data-theme={theme ?? undefined}>
+    <html lang={lang} dir={dir} data-theme={theme ?? undefined} data-sidebar={getSidebarMode()}>
       <body>
         <a className="skip-link" href="#main">{t("تخطَّ إلى المحتوى", "Skip to content")}</a>
         <Suspense fallback={null}><TopProgress /></Suspense>
