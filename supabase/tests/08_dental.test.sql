@@ -102,8 +102,10 @@ select test.ok(public.share_contribute_dental_exam(:'d_sess', jsonb_build_object
   'the clinician can link only to diagnoses they added through this share');
 select (public.share_contribute(:'d_sess', 'conditions', jsonb_build_object('name', 'Caries 26', 'teeth', '[26]'::jsonb, 'evidence', 'clinical')) ->> 'id') as dx2 \gset
 select test.ok((select teeth = '{26}' and contributed_by = :'ctr'::uuid from public.conditions where id = :'dx2'), 'a diagnosis added through the share names its tooth');
+select test.ok(public.share_contribute_dental_exam(:'d_sess', jsonb_build_object('exam_date', current_date, 'kind', 'periodic', 'source', 'self'), '[{"tooth":26,"status":"present"}]', '[]') ->> 'status' = 'invalid',
+  'an exam payload carrying a source key is refused (0033)');
 select (public.share_contribute_dental_exam(:'d_sess',
-  jsonb_build_object('exam_date', current_date, 'kind', 'periodic', 'source', 'self', 'examiner_name', 'Dr Enamel'),
+  jsonb_build_object('exam_date', current_date, 'kind', 'periodic', 'examiner_name', 'Dr Enamel'),
   '[{"tooth":26,"status":"present"},{"tooth":18,"status":"extracted"}]',
   jsonb_build_array(jsonb_build_object('tooth', 26, 'surfaces', jsonb_build_array('D'), 'kind', 'caries', 'evidence', 'clinical_radiographic', 'condition_id', :'dx2'),
                     jsonb_build_object('tooth', 21, 'surfaces', jsonb_build_array('B'), 'kind', 'filling', 'material', 'composite')),

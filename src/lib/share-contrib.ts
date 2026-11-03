@@ -1,5 +1,8 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createHash } from "node:crypto";
+import { inspectSignature } from "@/lib/signature";
+import type { DateCtx } from "@/lib/share-validation";
 
 export interface ContribItem { table: string; id: string; label: string | null; at: string | null; record_status: string; by: string; mine: boolean }
 /** the doctor as the patient named them on the link */
@@ -31,12 +34,37 @@ export async function contribState(session: string): Promise<ContribState> {
   return { ...(data as ContribState), clinician: c?.status === "ok" && c.name ? c : null };
 }
 
-const PNG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-/** Decodes an on-screen signature (PNG data URL); null when it is not a real, reasonably sized PNG. */
+/** Decodes an on-screen signature (PNG data URL); null when it is not a real, reasonably sized, non-blank PNG. */
 export function signaturePng(dataUrl: string): Buffer | null {
-  const m = /^data:image\/png;base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl);
-  if (!m) return null;
-  const bytes = Buffer.from(m[1], "base64");
-  if (bytes.length < 200 || bytes.length > 400_000) return null;
-  return PNG.every((b, i) => bytes[i] === b) ? bytes : null;
+  const r = inspectSignature(dataUrl);
+  return r.ok ? r.bytes : null;
+}
+
+// ---------------------------------------------------------------- limits and the gate (migration 0033)
+export interface ShareLimits {
+  status: string; dob?: string | null; date_from?: string | null; date_to?: string | null; created_at?: string; expires_at?: string; session_expires_at?: string | null;
+  uploads?: number; upload_bytes?: number; max?: number; used?: number; contributor_name?: string | null; facility?: string | null;
+}
+/** What a form needs to apply the rules (and the actions use as the authority): the patient's birth, the period of the link, what is left. */
+export async function shareLimits(session: string): Promise<ShareLimits> {
+  const { data, error } = await createAdminClient().rpc("share_limits", { p_session_token: session });
+  return error || !data ? { status: "error" } : (data as ShareLimits);
+}
+export const dateCtxOf = (l: ShareLimits, today: string): DateCtx => ({ today, dob: l.dob ?? null, from: l.date_from ?? null, to: l.date_to ?? null });
+
+/** The key of one submission: the action and every field except the identity of the session. Two identical submissions share a key. */
+export function submissionKey(action: string, fd: FormData): string {
+  const parts: string[] = [action];
+  for (const [k, v] of fd.entries()) if (typeof v === "string" && k !== "_t" && !k.startsWith("$ACTION")) parts.push(`${k}=${v}`);
+  return createHash("sha256").update(parts.sort().join("\n")).digest("hex");
+}
+export type Gate = "ok" | "duplicate" | "rate_limited" | "expired";
+export async function claimSubmission(session: string, key: string): Promise<Gate> {
+  const { data, error } = await createAdminClient().rpc("share_claim_submission", { p_session_token: session, p_key: key });
+  const st = (data as { status?: string } | null)?.status;
+  if (error) return "ok";                              // the gate is a convenience; the database still enforces the burst limit
+  return st === "duplicate" || st === "rate_limited" || st === "expired" ? st : "ok";
+}
+export async function releaseSubmission(session: string, key: string): Promise<void> {
+  await createAdminClient().rpc("share_release_submission", { p_session_token: session, p_key: key });
 }

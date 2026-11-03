@@ -97,17 +97,17 @@ select public.consent_create(:'pr', jsonb_build_object('kind', 'anesthesia', 'ti
   :'sig2') as c_an \gset
 select test.ok((select treatment_plan_id is null and signer_role = 'guardian' from public.consents where id = :'c_an'), 'a consent need not cover a plan; a guardian can sign');
 
-select test.throws(format($$select public.consent_create(%L, '{"kind":"surgery","title":"Bad","body":"text here","signer_name":"A B","signer_role":"patient"}', %L)$$, :'pr', :'po' || '/signatures/cccccccc-cccc-cccc-cccc-cccccccccccc.png'),
+select test.throws(format($$select public.consent_create(%L, '{"kind":"surgery","title":"Bad","body":"text here for the consent","signer_name":"A B","signer_role":"patient"}', %L)$$, :'pr', :'po' || '/signatures/cccccccc-cccc-cccc-cccc-cccccccccccc.png'),
   'check constraint|violates', 'the signature must be in the patient''s own folder');
-select test.throws(format($$select public.consent_create(%L, '{"kind":"surgery","title":"Bad","body":"text here","signer_name":"A B","signer_role":"nurse"}', %L)$$, :'pr', :'sig2'),
+select test.throws(format($$select public.consent_create(%L, '{"kind":"surgery","title":"Bad","body":"text here for the consent","signer_name":"A B","signer_role":"nurse"}', %L)$$, :'pr', :'sig2'),
   'check constraint|violates', 'the signer is a patient, guardian or representative');
-select test.throws(format($$select public.consent_create(%L, '{"kind":"magic","title":"Bad","body":"text here","signer_name":"A B","signer_role":"patient"}', %L)$$, :'pr', :'sig2'),
+select test.throws(format($$select public.consent_create(%L, '{"kind":"magic","title":"Bad","body":"text here for the consent","signer_name":"A B","signer_role":"patient"}', %L)$$, :'pr', :'sig2'),
   'check constraint|violates', 'the kind is one of the known ones');
-select test.throws(format($$select public.consent_create(%L, jsonb_build_object('kind', 'treatment', 'title', 'Bad', 'body', 'text here', 'signer_name', 'A B', 'signer_role', 'patient', 'treatment_plan_id', %L), %L)$$,
+select test.throws(format($$select public.consent_create(%L, jsonb_build_object('kind', 'treatment', 'title', 'Bad', 'body', 'text here for the consent', 'signer_name', 'A B', 'signer_role', 'patient', 'treatment_plan_id', %L), %L)$$,
   :'pr', :'pl_other', :'sig2'), 'foreign key|violates', 'a consent covers a plan of this patient only');
-select test.throws(format($$select public.consent_create(%L, jsonb_build_object('kind', 'treatment', 'title', 'Bad', 'body', 'text here', 'signer_name', 'A B', 'signer_role', 'patient',
+select test.throws(format($$select public.consent_create(%L, jsonb_build_object('kind', 'treatment', 'title', 'Bad', 'body', 'text here for the consent', 'signer_name', 'A B', 'signer_role', 'patient',
   'treatment_item_id', (select id from public.treatment_items where plan_id = %L and catalog_code = 'scaling')), %L)$$, :'pr', :'pl_other', :'sig2'), 'foreign key|violates', 'nor an item of another patient''s plan');
-select test.throws(format($$select public.consent_create(%L, jsonb_build_object('kind', 'treatment', 'title', 'Bad', 'body', 'text here', 'signer_name', 'A B', 'signer_role', 'patient',
+select test.throws(format($$select public.consent_create(%L, jsonb_build_object('kind', 'treatment', 'title', 'Bad', 'body', 'text here for the consent', 'signer_name', 'A B', 'signer_role', 'patient',
   'treatment_plan_id', %L, 'treatment_item_id', (select id from public.treatment_items where plan_id = %L)), %L)$$, :'pr', :'pl', :'pl2', :'sig2'),
   'consent_plan_mismatch', 'the treatment must belong to the plan named');
 
@@ -123,7 +123,7 @@ select test.ok((select count(*) = 1 from public.consents where id = :'c1'), 'and
 select test.as_user(:'bob'::uuid);
 select test.ok((select count(*) = 0 from public.consents where patient_id = :'pr'), 'another account sees no consent');
 select test.throws(format($$select public.consent_withdraw(%L, 'not mine to withdraw')$$, :'c1'), 'not_found', 'nor withdraws one');
-select test.throws(format($$select public.consent_create(%L, '{"kind":"treatment","title":"Fake","body":"text here","signer_name":"A B","signer_role":"patient"}', %L)$$, :'pr', :'sig2'),
+select test.throws(format($$select public.consent_create(%L, '{"kind":"treatment","title":"Fake","body":"text here for the consent","signer_name":"A B","signer_role":"patient"}', %L)$$, :'pr', :'sig2'),
   'forbidden|42501', 'nor signs one into the file');
 select test.as_user(:'alice'::uuid);
 
@@ -174,16 +174,18 @@ select (public.share_confirm_clinician(:'sess') ->> 'contributor_id') as ctr \gs
 select (public.share_confirm_clinician(:'sess_n') ->> 'contributor_id') as ctr_n \gset
 select (public.share_confirm_clinician(:'sess_c') ->> 'contributor_id') as ctr_c \gset
 select test.ok(public.share_prescription_create(:'sess_n', '{}', '[{"name_generic":"Aspirin"}]') ->> 'status' = 'forbidden', 'a link that does not allow prescriptions refuses them');
-select test.ok(public.share_present_consent(:'sess_n', '{"kind":"treatment","title":"T","body":"text here","signer_name":"A B","signer_role":"patient"}', :'pr' || '/signatures/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee.png') ->> 'status' = 'forbidden',
+select test.ok(public.share_present_consent(:'sess_n', '{"kind":"treatment","title":"T","body":"text here for the consent","signer_name":"A B","signer_role":"patient"}', :'pr' || '/signatures/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee.png') ->> 'status' = 'forbidden',
   'nor consents');
 select test.ok(public.share_prescription_create(:'sess', '{}', '[]') ->> 'status' = 'invalid', 'an empty prescription is invalid');
 select test.ok(public.share_prescription_create(:'sess', '{}', '[{"strength":"5 mg"}]') ->> 'status' = 'invalid' , 'a line without a medicine name is invalid');
 select test.ok(public.share_prescription_create('not-a-session-token-at-all-xxxxxxxx', '{}', '[{"name_generic":"x"}]') ->> 'status' = 'expired', 'an unknown session is refused');
 
+select test.ok(public.share_prescription_create(:'sess', jsonb_build_object('prescriber_name', 'Forged Name', 'specialty_id', :'s_card', 'status', 'cancelled'),
+  '[{"name_generic":"Aspirin","dose":"100 mg","frequency":"daily","duration_days":5}]') ->> 'status' = 'invalid', 'a prescription payload carrying a status or specialty key is refused (0033)');
 select (public.share_prescription_create(:'sess',
-  jsonb_build_object('prescriber_name', 'Forged Name', 'prescriber_license', 'FORGED', 'specialty_id', :'s_card', 'status', 'cancelled', 'notes', 'from the link'),
+  jsonb_build_object('prescriber_name', 'Forged Name', 'prescriber_license', 'FORGED', 'notes', 'from the link'),
   jsonb_build_array(jsonb_build_object('name_generic', 'Metronidazole', 'strength', '400 mg', 'frequency', 'three times a day', 'quantity', '15 tablets', 'duration_days', 5, 'refills', 0),
-                    jsonb_build_object('name_generic', 'Chlorhexidine', 'form', 'mouthwash', 'frequency', 'twice a day', 'duration_days', 7))) ->> 'id') as srx \gset
+                    jsonb_build_object('name_generic', 'Chlorhexidine', 'form', 'other', 'dose', '15 ml', 'frequency', 'twice a day', 'duration_days', 7))) ->> 'id') as srx \gset
 select test.as_super();
 select test.ok((select prescriber_name = 'Dr Lina Prescriber' and prescriber_license = 'LIC-77' and facility_name = 'Molar Clinic' and contributed_by = :'ctr'::uuid and source = 'clinic'
                    and verification = 'confirmed' and status = 'active' and specialty_id = :'s_dent'::uuid and notes = 'from the link' from public.prescriptions where id = :'srx'),
@@ -215,7 +217,7 @@ select test.ok(public.share_rx_extras('not-a-session-token-at-all-xxxxxxxx') ->>
 select test.ok(public.share_retract_prescription(:'sess', :'rx'::uuid, 'not mine to withdraw') ->> 'status' = 'not_found', 'a doctor cannot withdraw a prescription the patient wrote');
 select test.ok(public.share_retract_prescription(:'sess_c', :'srx'::uuid, 'not theirs') ->> 'status' = 'not_found', 'nor another doctor''s');
 select test.ok(public.share_retract_prescription(:'sess', :'srx'::uuid, 'no') ->> 'status' = 'reason_required', 'withdrawing needs a reason');
-select (public.share_prescription_create(:'sess', '{}', '[{"name_generic":"Naproxen","duration_days":3}]') ->> 'id') as srx2 \gset
+select (public.share_prescription_create(:'sess', '{}', '[{"name_generic":"Naproxen","dose":"250 mg","frequency":"twice a day","duration_days":3}]') ->> 'id') as srx2 \gset
 select test.ok(public.share_retract_prescription(:'sess', :'srx2'::uuid, 'wrong drug chosen') ->> 'status' = 'ok', 'a doctor withdraws their own prescription');
 select test.as_super();
 select test.ok((select record_status = 'entered_in_error' and invalidated_reason like '%wrong drug chosen%' from public.prescriptions where id = :'srx2')
@@ -245,9 +247,13 @@ select test.ok((select count(*) = 0 from public.prescriptions where contributed_
 select test.as_service();
 select :'pr' || '/signatures/f0000000-0000-0000-0000-000000000001.png' as dsig1 \gset
 select :'pr' || '/signatures/f0000000-0000-0000-0000-000000000002.png' as dsig2 \gset
+select test.ok(public.share_present_consent(:'sess',
+  jsonb_build_object('kind', 'surgery', 'title', 'Consent to extraction 38', 'body', 'Extraction of 38 explained.', 'signer_name', 'Rx Patient', 'signer_role', 'patient',
+                     'treatment_item_id', :'it_ext', 'presented_by', 'Forged Presenter', 'specialty_id', :'s_card'), :'dsig1') ->> 'status' = 'invalid',
+  'a consent payload carrying a presenter or specialty key is refused (0033)');
 select (public.share_present_consent(:'sess',
   jsonb_build_object('kind', 'surgery', 'title', 'Consent to extraction 38', 'body', 'Extraction of 38 explained.', 'signer_name', 'Rx Patient', 'signer_role', 'patient',
-                     'treatment_item_id', :'it_ext', 'presented_by', 'Forged Presenter', 'specialty_id', :'s_card', 'witness_name', 'Receptionist'),
+                     'treatment_item_id', :'it_ext', 'witness_name', 'Receptionist'),
   :'dsig1') ->> 'id') as dc1 \gset
 select test.as_super();
 select test.ok((select presented_by = 'Dr Lina Prescriber' and treatment_plan_id = :'pl'::uuid and treatment_item_id = :'it_ext'::uuid and specialty_id = :'s_dent'::uuid and contributed_by = :'ctr'::uuid
@@ -255,17 +261,17 @@ select test.ok((select presented_by = 'Dr Lina Prescriber' and treatment_plan_id
   'a doctor presents a consent for a treatment: the presenter is the named doctor, the plan follows the treatment, the signature is stored under the patient');
 select test.ok((select count(*) = 1 from public.audit_logs where table_name = 'consents' and record_id = :'dc1' and actor_kind = 'share_contributor'), 'audited under the doctor');
 select test.as_service();
-select test.ok(public.share_present_consent(:'sess', jsonb_build_object('kind', 'surgery', 'title', 'T', 'body', 'text here', 'signer_name', 'A B', 'signer_role', 'patient', 'treatment_item_id', gen_random_uuid()), :'dsig2') ->> 'status' = 'not_found',
+select test.ok(public.share_present_consent(:'sess', jsonb_build_object('kind', 'surgery', 'title', 'Consent T', 'body', 'text here for the consent', 'signer_name', 'A B', 'signer_role', 'patient', 'treatment_item_id', gen_random_uuid()), :'dsig2') ->> 'status' = 'not_found',
   'a treatment that does not exist is not found');
-select test.ok(public.share_present_consent(:'sess', jsonb_build_object('kind', 'treatment', 'title', 'T', 'body', 'text here', 'signer_name', 'A B', 'signer_role', 'patient', 'treatment_plan_id', :'pl_other'), :'dsig2') ->> 'status' = 'not_found',
+select test.ok(public.share_present_consent(:'sess', jsonb_build_object('kind', 'treatment', 'title', 'Consent T', 'body', 'text here for the consent', 'signer_name', 'A B', 'signer_role', 'patient', 'treatment_plan_id', :'pl_other'), :'dsig2') ->> 'status' = 'not_found',
   'nor a plan of another patient');
-select test.ok(public.share_present_consent(:'sess', jsonb_build_object('kind', 'treatment', 'title', 'T', 'body', 'text here', 'signer_name', 'A B', 'signer_role', 'patient'), :'po' || '/signatures/f0000000-0000-0000-0000-000000000003.png') ->> 'status' = 'invalid',
+select test.ok(public.share_present_consent(:'sess', jsonb_build_object('kind', 'treatment', 'title', 'Consent T', 'body', 'text here for the consent', 'signer_name', 'A B', 'signer_role', 'patient'), :'po' || '/signatures/f0000000-0000-0000-0000-000000000003.png') ->> 'status' = 'invalid',
   'a signature outside this patient''s folder is refused');
-select test.ok(public.share_present_consent(:'sess_c', jsonb_build_object('kind', 'treatment', 'title', 'T', 'body', 'text here', 'signer_name', 'A B', 'signer_role', 'patient', 'treatment_plan_id', :'pl'), :'dsig2') ->> 'status' = 'forbidden',
+select test.ok(public.share_present_consent(:'sess_c', jsonb_build_object('kind', 'treatment', 'title', 'Consent T', 'body', 'text here for the consent', 'signer_name', 'A B', 'signer_role', 'patient', 'treatment_plan_id', :'pl'), :'dsig2') ->> 'status' = 'forbidden',
   'a link that does not cover the dental file cannot present a consent for a dental plan');
-select test.ok(public.share_present_consent(:'sess', jsonb_build_object('kind', 'surgery', 'title', 'T', 'body', 'text here', 'signer_name', 'A B', 'signer_role', 'patient', 'supersedes', :'c1b'), :'dsig2') ->> 'status' = 'not_found',
+select test.ok(public.share_present_consent(:'sess', jsonb_build_object('kind', 'surgery', 'title', 'Consent T', 'body', 'text here for the consent', 'signer_name', 'A B', 'signer_role', 'patient', 'supersedes', :'c1b'), :'dsig2') ->> 'status' = 'not_found',
   'a doctor cannot supersede a consent the patient signed themselves');
-select test.ok(public.share_present_consent(:'sess', jsonb_build_object('kind', 'surgery', 'title', 'T', 'body', 'short', 'signer_name', 'A B', 'signer_role', 'nurse'), :'dsig2') ->> 'status' = 'invalid',
+select test.ok(public.share_present_consent(:'sess', jsonb_build_object('kind', 'surgery', 'title', 'Consent T', 'body', 'short', 'signer_name', 'A B', 'signer_role', 'nurse'), :'dsig2') ->> 'status' = 'invalid',
   'the signer''s role is checked');
 select (public.share_present_consent(:'sess',
   jsonb_build_object('kind', 'surgery', 'title', 'Consent to extraction 38 (v2)', 'body', 'Updated explanation.', 'signer_name', 'Rx Patient', 'signer_role', 'patient', 'supersedes', :'dc1'), :'dsig2') ->> 'id') as dc2 \gset
@@ -291,7 +297,7 @@ select test.as_user(:'alice'::uuid);
 select public.share_revoke(:'sh_id'::uuid, 'done');
 select test.as_service();
 select test.ok(public.share_prescription_create(:'sess', '{}', '[{"name_generic":"Late"}]') ->> 'status' = 'expired', 'a revoked link writes no prescription');
-select test.ok(public.share_present_consent(:'sess', '{"kind":"treatment","title":"T","body":"text here","signer_name":"A B","signer_role":"patient"}', :'dsig2') ->> 'status' = 'expired', 'nor presents a consent');
+select test.ok(public.share_present_consent(:'sess', '{"kind":"treatment","title":"T","body":"text here for the consent","signer_name":"A B","signer_role":"patient"}', :'dsig2') ->> 'status' = 'expired', 'nor presents a consent');
 select test.ok(public.share_rx_extras(:'sess') ->> 'status' = 'expired', 'nor shows them');
 
 -- the per-share limit counts both
@@ -304,8 +310,8 @@ update public.medical_shares set max_contributions = 1 where id = :'id_l'::uuid;
 select test.as_service();
 select (public.share_open(:'tok_l', :'pin_l', 'ip-rx4', 'UA') ->> 'session_token') as sess_l \gset
 select public.share_confirm_clinician(:'sess_l');
-select test.ok(public.share_prescription_create(:'sess_l', '{}', '[{"name_generic":"One"}]') ->> 'status' = 'ok', 'the first addition passes');
-select test.ok(public.share_prescription_create(:'sess_l', '{}', '[{"name_generic":"Two"}]') ->> 'status' = 'limit', 'the second is over the limit of the link');
+select test.ok(public.share_prescription_create(:'sess_l', '{}', '[{"name_generic":"One","dose":"1 tablet","frequency":"daily","duration_days":3}]') ->> 'status' = 'ok', 'the first addition passes');
+select test.ok(public.share_prescription_create(:'sess_l', '{}', '[{"name_generic":"Two","dose":"1 tablet","frequency":"daily","duration_days":3}]') ->> 'status' = 'limit', 'the second is over the limit of the link');
 select test.as_super();
 select test.ok((select specialty_id is null from public.prescriptions where contributed_by = (select id from public.share_contributors where share_id = :'id_l'::uuid) and record_status = 'active'),
   'on a whole-file link the prescription has no specialty unless the form names one');

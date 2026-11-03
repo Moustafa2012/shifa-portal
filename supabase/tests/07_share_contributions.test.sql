@@ -46,9 +46,13 @@ select test.ok(exists (select 1 from public.medical_share_access_logs where shar
 select test.ok(public.share_identify(:'rw_sess', 'Somebody Else', null, null, null, null, :'pc' || '/signatures/sig2.png') ->> 'contributor_id' = :'ctr',
   'one identity per session (and a typed name never replaces the one the patient gave)');
 
+-- forged provenance in the payload is refused outright (0033), not silently dropped
+select test.ok(public.share_contribute(:'rw_sess', 'conditions',
+  jsonb_build_object('name', 'CONTRIB-FORGED', 'category', 'diagnosis', 'patient_id', :'po', 'contributed_by', gen_random_uuid(), 'verification', 'reported',
+                     'recorded_by', :'bob', 'source', 'self'), 'ip-c2', 'UA') ->> 'status' = 'invalid'
+               and not exists (select 1 from public.conditions where name = 'CONTRIB-FORGED'), 'a payload carrying patient, provenance or author keys is refused and writes nothing');
 select (public.share_contribute(:'rw_sess', 'conditions',
-  jsonb_build_object('name', 'CONTRIB-CARIES-16', 'category', 'diagnosis', 'certainty', 'confirmed', 'specialty_id', :'s_card',
-                     'patient_id', :'po', 'contributed_by', gen_random_uuid(), 'verification', 'reported', 'recorded_by', :'bob', 'source', 'self'),
+  jsonb_build_object('name', 'CONTRIB-CARIES-16', 'category', 'diagnosis', 'certainty', 'confirmed', 'specialty_id', :'s_card'),
   'ip-c2', 'UA') ->> 'id') as k1 \gset
 select test.ok(:'k1' is not null, 'a diagnosis is added through the share');
 select test.ok((select patient_id = :'pc'::uuid and contributed_by = :'ctr'::uuid and source = 'clinic' and verification = 'confirmed'
@@ -58,9 +62,8 @@ select test.ok((select patient_id = :'pc'::uuid and contributed_by = :'ctr'::uui
 select test.ok(public.share_contribute(:'rw_sess', 'procedures', '{"name":"Not allowed","kind":"dental"}') ->> 'status' = 'forbidden',
   'only the modules chosen by the patient can be added');
 select test.ok(public.share_contribute(:'rw_sess', 'patients', '{"full_name":"x"}') ->> 'status' = 'forbidden', 'other tables are refused');
-select test.throws(format($$select public.share_contribute(%L, 'clinical_notes', %L)$$, :'rw_sess',
-  jsonb_build_object('body', 'linked to another patient', 'noted_at', now(), 'encounter_id', :'e_other')),
-  'foreign key|violates', 'a link to another patient''s visit is refused');
+select test.ok(public.share_contribute(:'rw_sess', 'clinical_notes', jsonb_build_object('body', 'linked to another patient', 'noted_at', now(), 'encounter_id', :'e_other'))
+                 ->> 'reason' = 'encounter_id:uuid', 'a link to another patient''s visit is refused');
 select (public.share_contribute(:'rw_sess', 'encounters', jsonb_build_object('kind', 'dental', 'started_at', now() - interval '1 hour', 'reason', 'CONTRIB-VISIT')) ->> 'id') as v1 \gset
 select (public.share_contribute(:'rw_sess', 'clinical_notes', jsonb_build_object('body', 'CONTRIB-NOTE', 'noted_at', now(), 'encounter_id', :'v1')) ->> 'id') as n1 \gset
 select test.ok((select encounter_id = :'v1'::uuid from public.clinical_notes where id = :'n1'), 'a note can be linked to the visit added in the same share');
