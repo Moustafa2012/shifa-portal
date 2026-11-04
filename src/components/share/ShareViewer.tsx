@@ -1,4 +1,5 @@
-import { TriangleAlert, ShieldCheck, CircleHelp, FileText, LogOut, Printer } from "lucide-react";
+import { TriangleAlert, ShieldCheck, CircleHelp, FileText, LogOut, Printer, Timer, Clock, Compass } from "lucide-react";
+import { Avatar } from "@/components/Avatar";
 import { ExamExtras } from "@/components/dental/ExamExtras";
 import { baselineExam, openSoftTissueAlert } from "@/lib/dental-exam";
 import { i18n } from "@/lib/i18n";
@@ -120,31 +121,109 @@ export function ShareViewer({ b, token, contrib, dental, perio, ctx, uploaded, u
   return (
     <div className="stack">
       {!b.meta.allow_print && <style>{`@media print { body * { display: none !important; } }`}</style>}
-      <div className="row between no-print">
-        <div className="muted small">{t("جلسة محدودة المدة — انتهاء المشاركة", "Time-limited session — share expires")}: <strong>{dt(b.meta.expires_at)}</strong></div>
-        <div className="row">
-          {b.meta.allow_print ? <a className="btn sm" href={`/s/${token}/pdf`} target="_blank" rel="noopener noreferrer"><Printer size={14} aria-hidden="true" />{t("طباعة (PDF)", "Print (PDF)")}</a> : <Chip tone="muted">{t("الطباعة غير مسموحة", "Printing not allowed")}</Chip>}
-          <form action={endShare}><input type="hidden" name="_t" value={token} /><button className="btn sm"><LogOut size={14} aria-hidden="true" />{t("إنهاء الجلسة", "End session")}</button></form>
+      <div className="card no-print" style={{ padding: ".75rem 1.15rem" }}>
+        <div className="row between">
+          <div className="row" style={{ gap: ".6rem" }}>
+            <span className="chip info">
+              <Timer size={14} aria-hidden="true" />
+              {t("جلسة مصرحة ومؤقتة", "Authorized clinical session")}
+            </span>
+            <span className="muted small">
+              {t("انتهاء المشاركة", "Share expires")}: <strong>{dt(b.meta.expires_at)}</strong>
+            </span>
+          </div>
+          <div className="row" style={{ gap: ".5rem" }}>
+            {b.meta.allow_print ? (
+              <a className="btn sm" href={`/s/${token}/pdf`} target="_blank" rel="noopener noreferrer">
+                <Printer size={14} aria-hidden="true" />
+                {t("طباعة (PDF)", "Print (PDF)")}
+              </a>
+            ) : (
+              <Chip tone="muted">{t("الطباعة غير مسموحة", "Printing disabled")}</Chip>
+            )}
+            <form action={endShare}>
+              <input type="hidden" name="_t" value={token} />
+              <button type="submit" className="btn sm danger">
+                <LogOut size={14} aria-hidden="true" />
+                {t("إنهاء الجلسة", "End session")}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
-      <section className="card">
+      <section className="card patient-head">
         <div className="row between">
-          <div><h1 style={{ marginBottom: ".1rem" }}>{lang === "en" && p.full_name_en ? p.full_name_en : p.full_name}</h1>
-            <p className="muted" style={{ margin: 0 }}><span className="ltr">{p.mrn}</span> · {p.age_years} {t("سنة", "y")} · {lbl(SEX, p.sex, lang)} · {t("الميلاد", "DOB")} {d(p.date_of_birth)}{p.nationality ? ` · ${p.nationality}` : ""}</p></div>
-          <div className="row">{p.blood_group ? <Chip tone="info">{t("الدم", "Blood")}: <span className="ltr">{p.blood_group}</span>{p.blood_group_verified ? "" : ` (${t("غير موثقة", "unverified")})`}</Chip> : <Chip tone="muted">{t("فصيلة الدم غير مسجلة", "Blood group not recorded")}</Chip>}
-            {p.phone && <Chip tone="muted"><span className="ltr">{p.phone}</span></Chip>}</div>
+          <div className="row" style={{ flexWrap: "nowrap", gap: ".9rem", alignItems: "center" }}>
+            <Avatar name={lang === "en" && p.full_name_en ? p.full_name_en : p.full_name} size="md" />
+            <div>
+              <h1 style={{ margin: "0 0 .15rem 0", fontSize: "1.35rem" }}>
+                {lang === "en" && p.full_name_en ? p.full_name_en : p.full_name}
+              </h1>
+              <p className="muted" style={{ margin: 0, fontSize: ".9rem" }}>
+                <span className="ltr">{p.mrn}</span> · {p.age_years} {t("سنة", "y")} · {lbl(SEX, p.sex, lang)} · {t("الميلاد", "DOB")} {d(p.date_of_birth)}
+                {p.nationality ? ` · ${p.nationality}` : ""}
+              </p>
+            </div>
+          </div>
+          <div className="row">
+            {p.blood_group ? (
+              <Chip tone="info">
+                {t("الدم", "Blood")}: <span className="ltr">{p.blood_group}</span>
+                {p.blood_group_verified ? "" : ` (${t("غير موثقة", "unverified")})`}
+              </Chip>
+            ) : (
+              <Chip tone="muted">{t("فصيلة الدم غير مسجلة", "Blood group not recorded")}</Chip>
+            )}
+            {p.phone && <Chip tone="muted"><span className="ltr">{p.phone}</span></Chip>}
+          </div>
         </div>
-        <p style={{ marginBlockStart: ".6rem", marginBlockEnd: 0 }}><strong>{t("الغرض", "Purpose")}:</strong> {b.meta.title}{b.meta.recipient_label ? ` — ${b.meta.recipient_label}` : ""}</p>
-        <p className="small muted" style={{ margin: 0 }}>
-          {t("النطاق", "Scope")}: {b.meta.scope_kind === "specialty" ? b.meta.specialties.map((x) => (lang === "ar" ? x.name_ar : x.name_en)).join("، ") : b.meta.scope_kind === "full" ? t("الملف الكامل", "Whole file") : t("سجلات مختارة", "Selected records")}
-          {b.meta.date_from || b.meta.date_to ? ` · ${b.meta.date_from ?? "…"} → ${b.meta.date_to ?? "…"}` : ""}
-          {" · "}{t("يتضمن", "includes")}: {b.meta.include.map((m) => SHARE_MODULES.find((x) => x.value === m)?.[lang]).filter(Boolean).join("، ") || t("الأساسيات فقط", "essentials only")}
-        </p>
+
+        <div className="card-foot" style={{ flexWrap: "wrap", justifyContent: "space-between", gap: ".6rem", marginBlockStart: ".75rem" }}>
+          <div>
+            <strong>{t("الغرض", "Purpose")}:</strong> {b.meta.title}
+            {b.meta.recipient_label ? ` — ${b.meta.recipient_label}` : ""}
+          </div>
+          <div className="small muted">
+            {t("النطاق", "Scope")}:{" "}
+            <span className="chip muted" style={{ fontSize: ".78rem" }}>
+              {b.meta.scope_kind === "specialty"
+                ? b.meta.specialties.map((x) => (lang === "ar" ? x.name_ar : x.name_en)).join("، ")
+                : b.meta.scope_kind === "full"
+                ? t("الملف الكامل", "Whole file")
+                : t("سجلات مختارة", "Selected records")}
+            </span>
+            {b.meta.date_from || b.meta.date_to ? ` · ${b.meta.date_from ?? "…"} → ${b.meta.date_to ?? "…"}` : ""}
+            {" · "}
+            {t("يتضمن", "includes")}: {b.meta.include.map((m) => SHARE_MODULES.find((x) => x.value === m)?.[lang]).filter(Boolean).join("، ") || t("الأساسيات فقط", "essentials only")}
+          </div>
+        </div>
       </section>
 
-      {ctx ? <ClinicalContext ctx={ctx} lang={lang} tz={tz} codes={ctx.specialties ?? "all"} title={t("السياق الصحي ومعلومات السلامة", "Health context & safety information")} /> : (
-        <section className="card" aria-label={t("معلومات السلامة", "Safety information")}>
+      <nav className="row no-print" aria-label={t("أقسام الملف", "Record sections")} style={{ gap: ".4rem", overflowX: "auto", paddingBottom: ".25rem" }}>
+        <span className="small muted row" style={{ gap: ".3rem", marginInlineEnd: ".25rem" }}>
+          <Compass size={14} aria-hidden="true" />
+          {t("انتقال سريع:", "Quick jump:")}
+        </span>
+        <a href="#sec-safety" className="pill">{t("معلومات السلامة", "Safety info")}</a>
+        {dental && <a href="#dental-summary" className="pill">{t("ملخص الأسنان", "Dental summary")}</a>}
+        {dental && <a href="#dental" className="pill">{t("مخطط الأسنان", "Tooth chart")}</a>}
+        {(plans.length > 0 || txWrite) && <a href="#treatment" className="pill">{t("خطط العلاج", "Treatment")}</a>}
+        {perio && <a href="#perio" className="pill">{t("مخطط اللثة", "Periodontal")}</a>}
+        {rxOn && rx && <a href="#sec-prescriptions" className="pill">{t("الوصفات", "Prescriptions")}</a>}
+        {consentsOn && rx && <a href="#sec-consents" className="pill">{t("الموافقات", "Consents")}</a>}
+        {inc.has("observations") && <a href="#sec-observations" className="pill">{t("القياسات والتحاليل", "Labs & vitals")}</a>}
+        {showEnc && <a href="#sec-encounters" className="pill">{t("الزيارات", "Visits")}</a>}
+        {showCond && <a href="#sec-conditions" className="pill">{t("التشخيصات", "Conditions")}</a>}
+        {showProc && <a href="#sec-procedures" className="pill">{t("الإجراءات", "Procedures")}</a>}
+        {showImg && <a href="#sec-imaging" className="pill">{t("التصوير", "Imaging")}</a>}
+        {showNotes && <a href="#sec-notes" className="pill">{t("الملاحظات", "Notes")}</a>}
+        {showDocs && <a href="#sec-documents" className="pill">{t("المستندات", "Documents")}</a>}
+        {b.meta.allow_notes && <a href="#sec-note-patient" className="pill">{t("ملاحظة للمريض", "Note to patient")}</a>}
+      </nav>
+
+      {ctx ? <div id="sec-safety"><ClinicalContext ctx={ctx} lang={lang} tz={tz} codes={ctx.specialties ?? "all"} title={t("السياق الصحي ومعلومات السلامة", "Health context & safety information")} /></div> : (
+        <section className="card" id="sec-safety" aria-label={t("معلومات السلامة", "Safety information")}>
         <h2>{t("معلومات السلامة", "Safety information")}</h2>
         {b.allergies.length > 0 ? (
           <div className="banner bad" role="alert"><TriangleAlert size={18} aria-hidden="true" style={{ flex: "none", marginBlockStart: 3 }} />
@@ -295,7 +374,7 @@ export function ShareViewer({ b, token, contrib, dental, perio, ctx, uploaded, u
       )}
 
       {inc.has("observations") && (
-        <Card title={t("القياسات والتحاليل عبر الزمن", "Measurements & lab results over time")}>
+        <Card title={t("القياسات والتحاليل عبر الزمن", "Measurements & lab results over time")} id="sec-observations">
           {obs.length === 0 ? <Empty>{t("لا توجد قياسات ضمن النطاق.", "No measurements in scope.")}</Empty> : (
             <>
               <Banner tone="info">{t("التصنيفات مؤشرات فحص عامة أو من المختبر وليست تشخيصاً. الوحدات والمجالات المرجعية كما سُجّلت.", "Flags are general screening prompts or lab flags, not a diagnosis. Units and reference ranges are as recorded.")}</Banner>
@@ -420,7 +499,7 @@ export function ShareViewer({ b, token, contrib, dental, perio, ctx, uploaded, u
       {contrib && <ContribSummary token={token} st={contrib} myNotes={myNotes} />}
 
       {b.meta.allow_notes && (
-        <Card title={t("ملاحظة للمريض", "Leave a note for the patient")}>
+        <Card title={t("ملاحظة للمريض", "Leave a note for the patient")} id="sec-note-patient">
           <p className="small muted">{t("لا تُضاف ملاحظتك إلى السجل الطبي تلقائياً؛ يراجعها المريض أولاً.", "Your note is not added to the medical record automatically; the patient reviews it first.")}</p>
           <ActionForm action={addShareNote} className="stack">
             <input type="hidden" name="_t" value={token} />
@@ -431,7 +510,13 @@ export function ShareViewer({ b, token, contrib, dental, perio, ctx, uploaded, u
         </Card>
       )}
 
-      <p className="small muted">{t("هذا عرض لمعلومات سجّلها المريض أو مقدمو الرعاية؛ قد لا يكون كاملاً. القرار السريري لك.", "This is a view of information recorded by the patient or care providers; it may be incomplete. Clinical judgement is yours.")} {t("أُنشئ في", "Generated at")} {dt(b.meta.generated_at)}.</p>
+      <div className="card-foot" style={{ margin: 0, justifyContent: "space-between", flexWrap: "wrap", gap: ".5rem" }}>
+        <p className="small muted row" style={{ gap: ".4rem", margin: 0, alignItems: "center" }}>
+          <ShieldCheck size={15} aria-hidden="true" />
+          <span>{t("هذا عرض لمعلومات سجّلها المريض أو مقدمو الرعاية؛ قد لا يكون كاملاً. القرار السريري لك.", "This is a view of information recorded by the patient or care providers; it may be incomplete. Clinical judgement is yours.")}</span>
+        </p>
+        <span className="small muted">{t("أُنشئ في", "Generated at")} {dt(b.meta.generated_at)}</span>
+      </div>
     </div>
   );
 }
