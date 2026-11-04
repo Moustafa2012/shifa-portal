@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="site-footer no-print">
       <div className="site-footer-in">
         <span className="brand"><LogoMark size={24} /><strong>{t("بوابة شفاء", "Shifa Portal")}</strong></span>
-        <span>{t("أداة لتنظيم المعلومات الصحية؛ لا تقدّم تشخيصاً ولا علاجاً. التنبيهات مؤشرات تستدعي تقييم مختص.", "A tool to organise health information; it does not diagnose or treat. Flags are prompts for professional assessment.")}</span>
+        <span>{t("منصة تنظيم المعلومات الصحية.", "A platform of organise health information.")}</span>
       </div>
     </footer>
   );
