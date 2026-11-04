@@ -617,6 +617,40 @@ body.no-print-share .print-only { display: block; }
 .pano-legend .implant-legend { fill: #dfe7ea; }
 .pano-legend .nodata-legend { fill: #eef2f4; opacity: .4; }
 .pano-legend .ptooth-problem { stroke-dasharray: 4 2; }
+
+/* panoramic toolbar, inspection hud, and anatomical overlays */
+.pano-container { display: flex; flex-direction: column; gap: .5rem; }
+.pano-hud { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; padding: .55rem .85rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); min-height: 42px; }
+.pano-hud-target { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; }
+.pano-hud-stats { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem; }
+.pano-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .45rem; margin-block-end: .25rem; }
+.pano-filters { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; }
+.pano-filter-btn { border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: 999px; padding: .25rem .65rem; font-size: .8rem; cursor: pointer; transition: background .15s, color .15s, border-color .15s; display: inline-flex; align-items: center; gap: .35rem; font-family: inherit; }
+.pano-filter-btn:hover { background: var(--surface-2); color: var(--text); }
+.pano-filter-btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent); font-weight: 600; }
+.pano-zoom-btn { border: 1px solid var(--border); background: var(--surface); color: var(--muted); border-radius: var(--radius-sm); padding: .25rem .55rem; font-size: .8rem; cursor: pointer; display: inline-flex; align-items: center; gap: .35rem; font-family: inherit; }
+.pano-zoom-btn:hover { background: var(--surface-2); color: var(--text); }
+.pano-zoom-btn[aria-pressed="true"] { background: var(--surface-3); color: var(--text); font-weight: 600; }
+.ptooth.dimmed { opacity: .22; transition: opacity .2s; }
+.ptooth.highlighted .ptooth-ring { stroke: #5fd4c6; stroke-width: 2.4; fill: rgba(95, 212, 198, .12); }
+.ptooth.highlighted.problem .ptooth-ring { stroke: #ff6b6b; stroke-width: 2.4; fill: rgba(255, 107, 107, .12); }
+.pano-quad-label { font-size: 10px; font-weight: 700; fill: #6f8a95; letter-spacing: .5px; }
+.pano-arch-label { font-size: 11px; font-weight: 700; fill: #8fa1a9; text-anchor: middle; letter-spacing: 1px; }
+.pano-midline-label { font-size: 9.5px; font-weight: 600; fill: #5fd4c6; text-anchor: middle; }
+.pano-bridge { stroke: #dfe7ea; stroke-width: 4; stroke-linecap: round; opacity: .85; }
+.pano-bridge-line { stroke: #7cc4ff; stroke-width: 1.5; stroke-dasharray: 2 2; }
+.pano-furcation { fill: #ffb067; stroke: #ff6b6b; stroke-width: 1; }
+.pano-calculus { stroke: #ffd166; stroke-width: 1.5; stroke-dasharray: 1 2; }
+.pano-retained-crown { stroke: #ff8a8a; stroke-width: 1.5; stroke-dasharray: 2 2; fill: none; }
+.pano-legend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .75rem 1.25rem; margin-block-start: .65rem; }
+.pano-legend-sec { display: flex; flex-direction: column; gap: .35rem; }
+.pano-legend-head { font-size: .75rem; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: .5px; margin: 0 0 .15rem 0; }
+.pano-legend-item { display: inline-flex; align-items: center; justify-content: space-between; gap: .45rem; padding: .2rem .35rem; border-radius: var(--radius-sm); border: 1px solid transparent; background: transparent; cursor: pointer; text-align: start; width: 100%; font-size: .82rem; color: var(--muted); transition: all .15s; font-family: inherit; }
+.pano-legend-item:hover { background: var(--surface-2); color: var(--text); }
+.pano-legend-item[aria-pressed="true"] { background: var(--surface-3); border-color: var(--border); color: var(--text); font-weight: 600; }
+.pano-legend-badge { font-size: .72rem; padding: 0 .4rem; border-radius: 999px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--border); font-weight: 600; }
+.pano.zoom-wide .odonto-scroll { overflow-x: auto; }
+.pano.zoom-wide .pano-svg { min-width: 980px; }
 .chart-views { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
 .chart-views button { border: 0; background: var(--surface); padding: .35rem .85rem; font: inherit; font-size: .88rem; cursor: pointer; color: var(--text); }
 .chart-views button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }

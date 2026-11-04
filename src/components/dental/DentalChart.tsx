@@ -122,7 +122,7 @@ export function DentalChart({
         {t(`أسنان لها بيانات فحص: ${sum.examined} · مفقودة/مخلوعة: ${sum.absent} · بها مشكلة: ${sum.disease} · بها علاج موجود: ${sum.work}`,
           `Teeth with exam data: ${sum.examined} · missing/extracted: ${sum.absent} · with a problem: ${sum.disease} · with existing work: ${sum.work}`)}
       </p>
-      {view === "pano" ? <PanoLegend lang={lang} /> : <OdontoLegend lang={lang} />}
+      {view === "pano" ? <PanoLegend lang={lang} teeth={teeth} /> : <OdontoLegend lang={lang} />}
 
       {wholeMouth.length > 0 && (
         <section className="whole-mouth" aria-label={t("صور الفم كاملاً", "Whole-mouth images")}>
