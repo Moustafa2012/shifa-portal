@@ -143,10 +143,10 @@ export function ShareViewer({ b, token, contrib, dental, perio, ctx, uploaded, u
             )}
             <form action={endShare}>
               <input type="hidden" name="_t" value={token} />
-              <button type="submit" className="btn sm danger">
+              <SubmitButton className="btn sm danger">
                 <LogOut size={14} aria-hidden="true" />
                 {t("إنهاء الجلسة", "End session")}
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </div>
