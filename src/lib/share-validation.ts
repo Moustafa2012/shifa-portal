@@ -42,9 +42,9 @@ export const MIN_SIGNATURE_EXTENT = 12;                 // px in the longer side
 /** C0 controls and DEL, except tab / line feed / carriage return */
 const CONTROL_RE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
 /** every control character, including tab and line breaks (single-line fields) */
-const LINE_CONTROL_RE = /[\u0000-\u001F\u007F\u0085  ]/;
+const LINE_CONTROL_RE = /[\u0000-\u001F\u007F\u0085\u2028\u2029]/;
 /** bidirectional overrides can make a stored name display as someone else's */
-const BIDI_RE = /[‪-‮⁦-⁩]/;
+const BIDI_RE = /[\u202A-\u202E\u2066-\u2069]/;
 const TAG_RE = /<\s*\/?\s*[A-Za-z!?]/;
 const ARABIC_INDIC = "٠١٢٣٤٥٦٧٨٩";
 const PERSIAN = "۰۱۲۳۴۵۶۷۸۹";
@@ -431,7 +431,7 @@ const EXT_OK: Record<string, string[]> = { "application/pdf": ["pdf"], "image/jp
 export function sanitizeFilename(name: unknown): string {
   const raw = typeof name === "string" ? name : "";
   const base = raw.split(/[\\/]/).pop() ?? "";
-  const clean = base.normalize("NFC").replace(/[\u0000-\u001F\u007F‪-‮⁦-⁩]/g, "").replace(/[^\p{L}\p{N}._ -]/gu, "_").replace(/^[. ]+/, "").trim().slice(0, MAX_FILENAME);
+  const clean = base.normalize("NFC").replace(/[\u0000-\u001F\u007F\u202A-\u202E\u2066-\u2069]/g, "").replace(/[^\p{L}\p{N}._ -]/gu, "_").replace(/^[. ]+/, "").trim().slice(0, MAX_FILENAME);
   return clean || "file";
 }
 /** The extension in the name must be one the sniffed content allows (name, content and declared type must agree). */
