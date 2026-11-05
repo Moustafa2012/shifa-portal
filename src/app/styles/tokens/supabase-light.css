@@ -1,0 +1,58 @@
+/* =====================================================================
+   Supabase design tokens — light theme palette (default)
+   Ported verbatim from supabase/supabase (themes/light.css).
+   ===================================================================== */
+:root, :root[data-theme="light"] {
+  --sb-border: rgba(0, 0, 0, 0.08);
+  --sb-border-default: rgba(0, 0, 0, 0.08);
+  --sb-border-muted: rgba(0, 0, 0, 0.05);
+  --sb-input: rgba(0, 0, 0, 0.12);
+  --sb-border-control: rgba(0, 0, 0, 0.12);
+  --sb-helpers-os-appearance: Light;
+  --sb-hue: 157.5;
+  --sb-surface-hue-offset: 180;
+  --sb-chroma: 0;
+  --sb-surface: 0.995;
+  --sb-elevation-step: 0.024;
+  --sb-contrast: 0.53;
+  --sb-foreground-lightness: 0.1;
+  --sb-muted-foreground-level: 0.65;
+  --sb-tertiary-foreground-level: 0.5;
+  --sb-primary: oklch(0.525 0.12 var(--sb-primary-hue));
+  --sb-primary-foreground: oklch(0.99 0.00275 var(--sb-primary-hue));
+  --sb-primary-solid: var(--sb-primary);
+  --sb-primary-solid-foreground: var(--sb-primary-foreground);
+  --sb-primary-solid-hover: var(--sb-primary-hover);
+  --sb-warning-hue: 58;
+  --sb-warning-lightness: 0.55;
+  --sb-destructive-lightness: 0.52;
+  --sb-info-lightness: 0.54;
+  --sb-code-block-5: 14deg 80.4% 58%;
+  --sb-code-block-4: 276.3deg 60% 52.9%;
+  --sb-code-block-3: 83.8deg 61.6% 48%;
+  --sb-code-block-2: 33.1deg 80% 52.9%;
+  --sb-code-block-1: 170.6deg 43.2% 51%;
+  --sb-code-token-string: #c46a0a;
+  --sb-code-token-string-expression: #c46a0a;
+  --sb-secondary-default: 247.8deg 100% 70%;
+  --sb-secondary-400: 248.3deg 54.5% 25.9%;
+  --sb-secondary-200: 248deg 53.6% 11%;
+  --sb-brand-default: 152.9deg 60% 52.9%;
+  --sb-brand-600: 156.5deg 86.5% 26.1%;
+  --sb-brand-500: 155.3deg 78.4% 40%;
+  --sb-brand-400: 151.3deg 66.9% 66.9%;
+  --sb-brand-300: 147.5deg 72% 80.4%;
+  --sb-brand-200: 147.6deg 72.5% 90%;
+  --sb-warning-600: 30.3deg 80.3% 47.8%;
+  --sb-warning-500: 36.3deg 85.7% 67.1%;
+  --sb-warning-400: 41.9deg 100% 81.8%;
+  --sb-warning-300: 44.3deg 100% 91.8%;
+  --sb-warning-200: 40deg 81.8% 97.8%;
+  --sb-destructive-default: 10.2deg 77.9% 53.9%;
+  --sb-destructive-600: 9.9deg 82% 43.5%;
+  --sb-destructive-500: 10.4deg 77.1% 79.4%;
+  --sb-destructive-400: 7.1deg 91.3% 91%;
+  --sb-destructive-300: 7.1deg 100% 96.7%;
+  --sb-destructive-200: 0deg 100% 99.4%;
+}
+

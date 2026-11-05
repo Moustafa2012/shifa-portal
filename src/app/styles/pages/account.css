@@ -1,0 +1,109 @@
+/* =====================================================================
+   Account & Security Pages (Migration 0032)
+   Active sessions, audit logs, and member management.
+   ===================================================================== */
+.session-list,
+.activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: .5rem;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .7rem .85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-width: 0;
+}
+
+.session-item[data-current="true"] {
+  border-color: color-mix(in srgb, var(--ok) 45%, var(--border));
+}
+
+.session-icon {
+  flex: none;
+  color: var(--muted);
+}
+
+.session-info {
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.session-info p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.session-name {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.session-act {
+  flex: none;
+}
+
+.activity-list li {
+  display: flex;
+  align-items: center;
+  gap: .5rem .75rem;
+  flex-wrap: wrap;
+  padding-block: .35rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.activity-list li:last-child {
+  border-bottom: 0;
+}
+
+.activity-list time {
+  margin-inline-start: auto;
+}
+
+.sub-h {
+  font-size: 1rem;
+  margin: 0 0 .4rem;
+  overflow-wrap: anywhere;
+}
+
+.member-file {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .8rem .9rem;
+  min-width: 0;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem .9rem;
+  flex-wrap: wrap;
+}
+
+.member-row .row {
+  gap: .5rem;
+}
+
+@media (max-width: 560px) {
+  .session-item {
+    flex-wrap: wrap;
+  }
+  .session-act,
+  .session-act .btn {
+    width: 100%;
+  }
+  .activity-list time {
+    margin-inline-start: 0;
+    flex-basis: 100%;
+  }
+}
+

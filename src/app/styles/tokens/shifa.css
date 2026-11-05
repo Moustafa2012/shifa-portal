@@ -1,0 +1,89 @@
+/* =====================================================================
+   Shifa Portal Design Tokens
+   The project's tokens, mapped onto the Supabase design tokens.
+   One source of truth: the light / dark switch and every value come from
+   Supabase's own OKLCH system.
+   ===================================================================== */
+:root {
+  --bg: var(--sb-background);
+  --surface: var(--sb-card);                 /* cards, panels */
+  --surface-raised: var(--sb-popover);       /* menus, dialogs */
+  --surface-2: var(--sb-muted);              /* subtle fill / hover */
+  --surface-3: var(--sb-accent);             /* selected / pressed */
+  --border: var(--sb-border);
+  --border-strong: var(--sb-input);
+  --border-stronger: var(--sb-border-stronger);
+  --border-control: var(--sb-input);
+  --border-control-hover: var(--sb-border-control-hover);
+  --text: var(--sb-foreground);
+  --muted: var(--sb-muted-foreground);       /* foreground-light */
+  --lighter: var(--sb-tertiary-foreground);  /* foreground-lighter */
+  --field: var(--sb-field);
+
+  --brand-500: hsl(var(--sb-brand-default));
+  --brand-600: hsl(var(--sb-brand-600));
+  --brand-700: hsl(var(--sb-brand-500));
+  --brand-800: hsl(var(--sb-brand-400));
+  --brand-900: hsl(var(--sb-brand-300));
+  --accent: var(--sb-primary);               /* green text / links */
+  --accent-strong: var(--sb-primary-hover);
+  --accent-soft: oklch(from var(--sb-primary-bright) l c h / 14%);
+  --on-accent: var(--sb-primary-solid-foreground);
+  --btn-bg: var(--sb-primary-solid);
+  --btn-bg-hover: var(--sb-primary-solid-hover);
+  --btn-fg: var(--sb-primary-solid-foreground);
+  --btn-border: transparent;
+
+  /* status: Supabase's stepped scales (200 fill, 400 border, 600 ink) */
+  --ok: hsl(var(--sb-brand-600));
+  --ok-bg: hsl(var(--sb-brand-default) / .1);
+  --ok-border: hsl(var(--sb-brand-500));
+  --warn: hsl(var(--sb-warning-600));
+  --warn-bg: hsl(var(--sb-warning-200));
+  --warn-border: hsl(var(--sb-warning-400));
+  --bad: hsl(var(--sb-destructive-600));
+  --bad-bg: hsl(var(--sb-destructive-200));
+  --bad-border: hsl(var(--sb-destructive-400));
+  --info: var(--sb-foreground);
+  --info-bg: var(--sb-card);
+  --info-border: var(--sb-border);
+  --sand: hsl(var(--sb-warning-600));
+  --sand-soft: hsl(var(--sb-warning-200));
+
+  /* shape, depth, rhythm (Supabase: radius-md 6px, cards rounded-lg 8px) */
+  --radius-sm: 4px;
+  --radius: 6px;
+  --radius-lg: 8px;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);   /* shadow-xs */
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 10px 38px -10px rgb(0 0 0 / 0.35), 0 10px 20px -15px rgb(0 0 0 / 0.2);
+  --focus: 0 0 0 2px var(--sb-background), 0 0 0 4px var(--sb-ring);
+  --control-h: 44px;
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2.25rem;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* type: Alyamama (owner's choice) in Supabase's scale; Source Code Pro for codes */
+  --font: "Alyamama", "Segoe UI", Tahoma, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --c1: hsl(var(--sb-brand-default));
+  --c2: hsl(var(--sb-warning-600));
+  --c3: oklch(0.65 0.14 250);
+  --c4: oklch(0.6 0.16 350);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+  }
+}
+

@@ -1,4 +1,5 @@
 "use client";
+import * as ProgressPrimitive from "@radix-ui/react-progress";
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -78,7 +79,15 @@ export function TopProgress() {
 
   return (
     <div className="topprogress" role="progressbar" aria-hidden={!active} aria-label="loading" data-active={active || undefined}>
-      <div className="topprogress-bar" style={{ transform: `scaleX(${value})` }} />
+      <ProgressPrimitive.Root
+        className="relative h-0.5 w-full overflow-hidden bg-transparent"
+        value={value * 100}
+      >
+        <ProgressPrimitive.Indicator
+          className="topprogress-bar h-full w-full flex-1 bg-primary transition-all duration-200"
+          style={{ transform: `scaleX(${value})`, transformOrigin: "start" }}
+        />
+      </ProgressPrimitive.Root>
     </div>
   );
 }

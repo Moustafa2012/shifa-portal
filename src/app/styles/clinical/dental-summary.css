@@ -1,0 +1,68 @@
+/* =====================================================================
+   Dental Summary Cards (Roadmap Item H4)
+   Overview tiles for restorative, periodontal, surgical, and hygiene status.
+   ===================================================================== */
+.dsum-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: var(--space-3, .9rem);
+  margin-block-start: .75rem;
+}
+
+.dsum-tile {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .7rem .85rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  display: grid;
+  align-content: start;
+  gap: .3rem;
+  background: var(--surface);
+}
+
+.dsum-tile h3 {
+  margin: 0;
+  font-size: .9rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.dsum-tile p {
+  margin: 0;
+}
+
+.dsum-kv {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: .2rem .8rem;
+  margin: 0;
+  font-size: .9rem;
+}
+
+.dsum-kv dt {
+  color: var(--muted);
+}
+
+.dsum-kv dd {
+  margin: 0;
+}
+
+.dsum-list {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  display: grid;
+  gap: .15rem;
+  font-size: .9rem;
+}
+
+.dsum-more {
+  font-size: .85rem;
+  justify-self: start;
+}
+
+.dsum-tile.alert {
+  border-color: var(--bad, #ca3214);
+  background: var(--bad-bg, transparent);
+}
+

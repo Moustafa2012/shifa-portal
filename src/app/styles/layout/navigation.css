@@ -1,0 +1,124 @@
+/* =====================================================================
+   Navigation Accessories
+   Top progress loading bar, spinners, and mobile bottom tab bar / sheet.
+   ===================================================================== */
+
+/* Top Progress Bar */
+.topprogress {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: 3px;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .25s;
+}
+
+.topprogress[data-active] {
+  opacity: 1;
+}
+
+.topprogress-bar {
+  height: 100%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: hsl(var(--sb-brand-default));
+  border-radius: 0 3px 3px 0;
+  transition: transform .22s ease-out;
+}
+
+[dir="rtl"] .topprogress-bar {
+  transform-origin: right;
+  border-radius: 3px 0 0 3px;
+}
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex: none;
+}
+
+/* Bottom Tab Bar (Mobile) */
+.bottomnav {
+  display: none;
+}
+
+/* Bottom Sheet (Mobile) */
+.sheet-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(7, 30, 36, .55);
+  display: flex;
+  align-items: flex-end;
+  animation: fade .2s both;
+}
+
+.sheet {
+  width: 100%;
+  max-height: 84vh;
+  max-height: 84dvh;
+  overflow: auto;
+  background: var(--surface);
+  border-radius: 22px 22px 0 0;
+  padding: .5rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  animation: slideup .28s var(--ease) both;
+  box-shadow: var(--shadow-lg);
+}
+
+.sheet-grab {
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border-strong);
+  margin: .25rem auto .6rem;
+}
+
+.sheet-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .3rem .5rem;
+}
+
+.sheet-links .group {
+  grid-column: 1 / -1;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--muted);
+  padding: .8rem .3rem .1rem;
+  text-transform: uppercase;
+}
+
+.sheet-links a {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .7rem .75rem;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration: none;
+  font-size: .93rem;
+  min-height: 48px;
+}
+
+.sheet-links a svg {
+  color: var(--accent);
+  flex: none;
+}
+
+.sheet-links a[aria-current="page"] {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+

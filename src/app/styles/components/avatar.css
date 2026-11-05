@@ -1,0 +1,102 @@
+/* =====================================================================
+   Avatar Component
+   Circular user & patient avatar with image and initials fallback.
+   ===================================================================== */
+.avatar {
+  box-sizing: border-box;
+  aspect-ratio: 1;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--sb-border);
+  line-height: 1;
+  letter-spacing: 0;
+  user-select: none;
+  background: color-mix(in srgb, hsl(var(--sb-brand-default)) 16%, var(--sb-card));
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  font-weight: 500;
+  font-size: 1.15rem;
+  flex: none;
+}
+
+.avatar.sm {
+  width: 40px;
+  height: 40px;
+  font-size: .95rem;
+}
+
+.avatar.lg {
+  width: 96px;
+  height: 96px;
+  font-size: 1.9rem;
+}
+
+.avatar.lg-ring {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px color-mix(in srgb, var(--brand-500) 55%, transparent);
+}
+
+.avatar-img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Photo Upload Form */
+.photo-form {
+  display: flex;
+  gap: 1.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .photo-form {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: start;
+  }
+  .photo-form .avatar.lg {
+    align-self: center;
+  }
+}
+
+/* Shell Top Bar Avatar */
+.shell-top .navuser {
+  display: flex;
+  align-items: center;
+}
+
+.shell-top .navuser-btn {
+  inline-size: 2rem;
+  block-size: 2rem;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  overflow: visible;
+}
+
+.shell-top .navuser-btn .avatar.sm {
+  inline-size: 2rem;
+  block-size: 2rem;
+  border: 1px solid var(--sb-border);
+  border-radius: 50%;
+  font-size: .75rem;
+}
+
+.shell-top .navuser-btn:hover .avatar.sm,
+.shell-top .navuser-btn[aria-expanded="true"] .avatar.sm {
+  border-color: var(--sb-input);
+}
+
+.shell-top .navuser-btn:focus-visible {
+  outline: 2px solid var(--sb-ring);
+  outline-offset: 2px;
+}
+

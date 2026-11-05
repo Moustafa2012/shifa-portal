@@ -1,0 +1,336 @@
+/* =====================================================================
+   Dental Chart (Odontogram)
+   SVG-based tooth chart, surfaces, conditions, and tooth panel.
+   ===================================================================== */
+.odonto {
+  direction: ltr;
+}
+
+.odonto-sides {
+  display: flex;
+  justify-content: space-between;
+  font-size: .8rem;
+  color: var(--muted);
+  margin-block-end: .25rem;
+  gap: .5rem;
+}
+
+.odonto-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-block-end: .25rem;
+}
+
+.odonto-svg {
+  display: block;
+  width: 100%;
+  min-width: 620px;
+  height: auto;
+  user-select: none;
+}
+
+.odonto-mid {
+  stroke: var(--border-strong);
+  stroke-dasharray: 3 4;
+}
+
+.tooth {
+  cursor: pointer;
+  outline: none;
+}
+
+.tooth-ring {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 2;
+}
+
+.tooth:hover .tooth-ring {
+  fill: var(--surface-2);
+}
+
+.tooth:focus-visible .tooth-ring {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+.tooth.sel .tooth-ring {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+}
+
+.tooth-num {
+  font-size: 11px;
+  text-anchor: middle;
+  fill: var(--text);
+  font-weight: 600;
+}
+
+.tooth.nodata .tooth-num {
+  fill: var(--muted);
+  font-weight: 400;
+}
+
+.tooth-badge {
+  font-size: 8.5px;
+  text-anchor: middle;
+  fill: var(--info);
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.tooth-badge tspan.bad,
+.tooth-badge-txt.bad {
+  fill: var(--bad);
+  color: var(--bad);
+}
+
+.surf {
+  fill: var(--surface);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.tooth.nodata .surf {
+  stroke: var(--border);
+  stroke-dasharray: 2 2;
+  fill: var(--surface-2);
+}
+
+.tooth.hidden .surf {
+  stroke-dasharray: 4 3;
+  stroke: var(--muted);
+}
+
+.tooth.absent .surf {
+  fill: transparent;
+  stroke: var(--border);
+}
+
+.surf.disease {
+  fill: var(--bad);
+  stroke: var(--bad);
+}
+
+.surf.mark {
+  fill: var(--sand);
+  stroke: var(--warn);
+  stroke-width: 2;
+}
+
+.dent-work-bg {
+  fill: var(--info-bg);
+}
+
+.dent-work-line {
+  stroke: var(--info);
+  stroke-width: 2.2;
+}
+
+.tooth-x {
+  stroke: var(--muted);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.legend-hidden {
+  stroke-dasharray: 4 3 !important;
+  stroke: var(--muted) !important;
+}
+
+.legend-nodata {
+  stroke-dasharray: 2 2 !important;
+  fill: var(--surface-2) !important;
+}
+
+.odonto-legend {
+  list-style: none;
+  padding: 0;
+  margin: .5rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1.1rem;
+  font-size: .82rem;
+  color: var(--muted);
+}
+
+.odonto-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.tooth-badge-txt {
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--info);
+  direction: ltr;
+}
+
+.tooth-panel {
+  border: 1px solid var(--sb-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+  margin-block-start: var(--space-4);
+  background: var(--sb-card);
+}
+
+.tooth-panel h3 {
+  margin: 0;
+}
+
+.tooth-panel h4 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: .95rem;
+}
+
+.tooth-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: .5rem;
+}
+
+.tooth-list li {
+  border-inline-start: 4px solid var(--border-strong);
+  padding: .35rem .6rem;
+  background: var(--sb-muted);
+  border-radius: var(--sb-radius-md);
+}
+
+.tooth-list li.disease {
+  border-inline-start-color: var(--bad);
+}
+
+.tooth-list li.work {
+  border-inline-start-color: var(--info);
+}
+
+.tooth-list li.planned {
+  border-inline-start-color: var(--warn);
+}
+
+.tooth-add {
+  border-block-start: 1px dashed var(--border-strong);
+  margin-block-start: var(--space-4);
+}
+
+.tooth-add .fold + .fold {
+  margin-block-start: .4rem;
+}
+
+.tooth-hist {
+  margin: 0;
+  padding-inline-start: 1.2rem;
+  display: grid;
+  gap: .3rem;
+}
+
+.status-pick,
+.surf-pick {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.status-pick legend,
+.surf-pick legend {
+  font-weight: 600;
+  margin-block-end: .3rem;
+  font-size: .9rem;
+}
+
+.surf-pick[disabled] {
+  opacity: .55;
+}
+
+.field.surf-pick {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .1rem;
+}
+
+.field.surf-pick > legend {
+  width: 100%;
+}
+
+.field.surf-pick .pill {
+  width: auto;
+}
+
+.status-hist {
+  margin-block-start: .4rem;
+}
+
+.status-hist ol {
+  margin: .3rem 0 0;
+  padding-inline-start: 1.2rem;
+  display: grid;
+  gap: .15rem;
+}
+
+.status-form {
+  gap: .5rem;
+  align-items: center;
+}
+
+.status-form .status-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .1rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.tooth-problem {
+  fill: none;
+  stroke: var(--bad);
+  stroke-width: 2.4;
+}
+
+.tooth.problem .tooth-num {
+  fill: var(--bad);
+}
+
+.tooth-editor {
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  background: var(--surface);
+}
+
+.tooth-editor h3 {
+  margin-top: 0;
+}
+
+.exam-summary {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  display: grid;
+  gap: .25rem;
+}
+
+.compare-form {
+  margin-block-end: var(--space-3);
+  gap: .5rem;
+}
+
+.compare-form select {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .compare-form select {
+    width: 100%;
+  }
+}
+
+.mk-proc { fill: var(--info); }
+.mk-img { fill: var(--muted); }
+.mk-plan { fill: var(--sb-warning); }
+

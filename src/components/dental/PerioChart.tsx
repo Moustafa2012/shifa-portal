@@ -1,5 +1,5 @@
 "use client";
-
+import { DirectionProvider } from "@/components/ui/direction";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useFormState } from "react-dom";
 import type { Lang } from "@/lib/i18n";
@@ -13,6 +13,8 @@ import type { DxLike, PerioFactors } from "@/lib/perio-staging";
 import { PerioDxFields, type VisitOption } from "./PerioDx";
 import { SubmitButton } from "@/components/ui/client";
 import { isLocalPath } from "@/lib/safe-path";
+import { Badge } from "@/components/ui/badge";
+import { Save, CheckCircle2 } from "lucide-react";
 
 /** what is typed, per tooth: numbers stay text while being typed ("-", "1" of "12") */
 interface Edit {
@@ -73,7 +75,7 @@ export function PerioSvg({ tooth, side, t, flip, label }: { tooth: number; side:
           {pts.map((p, i) => p.base !== null && <line key={i} x1={p.x} x2={p.x} y1={p.gm} y2={p.base} className={`perio-pocket ${p.tone ?? ""}`} />)}
           {line("gm") && <polyline points={line("gm")} className="perio-gm" />}
           {line("base") && <polyline points={line("base")} className="perio-cal" />}
-          {pts.map((p, i) => p.bop && p.base !== null && <circle key={`b${i}`} cx={p.x} cy={p.base} r="2.4" className="perio-bop-dot" />)}
+          {pts.map((p, i) => p.bop && p.base !== null && <circle key={`b${i}`} cx={p.x} cy={p.base} r="2.8" className="perio-bop-dot" />)}
         </>)}
       </g>
     </svg>
@@ -296,51 +298,133 @@ export function PerioChart({ lang, teeth, edit }: PerioChartProps) {
       </tr>,
     ];
     return (
-      <div className="table-wrap perio-wrap" key={which} dir="ltr">
-        <table className="perio-chart" dir="ltr" aria-label={upper ? t("الفك العلوي", "Upper arch") : t("الفك السفلي", "Lower arch")}>
-          <colgroup><col className="pc-label-col" />{list.map((n) => <Fragment key={n}><col /><col /><col /></Fragment>)}</colgroup>
-          <tbody>
-            {upper ? (<>{toothRow}{flagRows}{block(sides[0], true)}{block(sides[1], false)}</>)
-              : (<>{block(sides[0], true)}{block(sides[1], false)}{[...flagRows].reverse()}{toothRow}</>)}
-          </tbody>
-        </table>
-      </div>
+      <DirectionProvider direction="ltr" key={which}>
+        <div className="w-full max-w-full min-w-0 space-y-1.5" dir="ltr">
+          <div className="table-wrap perio-wrap w-full max-w-full min-w-0" dir="ltr">
+            <div className="odonto-sides" dir="ltr" style={{ direction: "ltr" }} aria-hidden="true">
+              <div className="odonto-sides-sticky" />
+              <div className="odonto-sides-content">
+                <span className="font-semibold text-xs text-foreground/85">
+                  {upper ? t("يمين المريض (UR) · الربع 1", "Patient's right (UR) · Q1") : t("يمين المريض (LR) · الربع 4", "Patient's right (LR) · Q4")}
+                </span>
+                <span className="text-xs text-muted-foreground font-medium">
+                  {upper ? t("الفك العلوي (MAXILLA) — دهليزي / حنكي", "Maxilla — Buccal / Palatal") : t("الفك السفلي (MANDIBLE) — لساني / دهليزي", "Mandible — Lingual / Buccal")}
+                </span>
+                <span className="font-semibold text-xs text-foreground/85">
+                  {upper ? t("يسار المريض (UL) · الربع 2", "Patient's left (UL) · Q2") : t("يسار المريض (LL) · الربع 3", "Patient's left (LL) · Q3")}
+                </span>
+              </div>
+            </div>
+            <table className="perio-chart" dir="ltr" aria-label={upper ? t("الفك العلوي", "Upper arch") : t("الفك السفلي", "Lower arch")}>
+              <colgroup><col className="pc-label-col" />{list.map((n) => <Fragment key={n}><col /><col /><col /></Fragment>)}</colgroup>
+              <tbody>
+                {upper ? (<>{toothRow}{flagRows}{block(sides[0], true)}{block(sides[1], false)}</>)
+                  : (<>{block(sides[0], true)}{block(sides[1], false)}{[...flagRows].reverse()}{toothRow}</>)}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </DirectionProvider>
     );
   };
 
+  const bopAlert = (summary.bopPct ?? 0) >= 10;
   const stats = (
-    <div className="perio-stats" aria-live="polite">
-      {[
-        [t("المواقع المسبورة", "Sites probed"), String(summary.sites)],
-        [t("النزف عند السبر", "Bleeding on probing"), summary.bopPct === null ? "—" : `${summary.bopPct}%`],
-        [t("البلاك", "Plaque"), summary.plaquePct === null ? "—" : `${summary.plaquePct}%`],
-        [t("جيوب ≥ 4 مم", "Pockets ≥ 4 mm"), String(summary.pd4)],
-        [t("جيوب ≥ 6 مم", "Pockets ≥ 6 mm"), String(summary.pd6)],
-        [t("متوسط الارتباط", "Mean CAL"), summary.meanCal === null ? "—" : `${summary.meanCal} ${t("مم", "mm")}`],
-        [t("أقصى فقد ارتباط", "Max CAL"), summary.maxCal === null ? "—" : `${summary.maxCal} ${t("مم", "mm")}`],
-      ].map(([k, v]) => <div key={k} className="perio-stat"><span className="k">{k}</span><span className="v">{v}</span></div>)}
+    <div className="perio-stats w-full max-w-full min-w-0" aria-live="polite" dir={ar ? "rtl" : "ltr"}>
+      <div className="perio-stat">
+        <span className="k">{t("المواقع المسبورة", "Sites probed")}</span>
+        <span className="v font-mono">{summary.sites}</span>
+      </div>
+      <div className={`perio-stat ${bopAlert ? "border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10" : ""}`}>
+        <div className="flex items-center justify-between gap-1">
+          <span className="k">{t("النزف عند السبر", "Bleeding on probing")}</span>
+          {summary.bopPct !== null && (
+            <Badge variant={bopAlert ? "bad" : "ok"} className="text-[10px] px-1.5 py-0">
+              {bopAlert ? t("التهاب نشط", "Active") : t("سليمة", "Healthy")}
+            </Badge>
+          )}
+        </div>
+        <span className={`v font-mono ${bopAlert ? "text-amber-700 dark:text-amber-400" : "text-foreground"}`}>
+          {summary.bopPct === null ? "—" : `${summary.bopPct}%`}
+        </span>
+      </div>
+      <div className="perio-stat">
+        <span className="k">{t("البلاك", "Plaque")}</span>
+        <span className="v font-mono">{summary.plaquePct === null ? "—" : `${summary.plaquePct}%`}</span>
+      </div>
+      <div className={`perio-stat ${summary.pd4 > 0 ? "border-amber-500/35" : ""}`}>
+        <div className="flex items-center justify-between gap-1">
+          <span className="k">{t("جيوب ≥ 4 مم", "Pockets ≥ 4 mm")}</span>
+          {summary.pd4 > 0 && <Badge variant="warn" className="text-[10px] px-1.5 py-0">{summary.pd4}</Badge>}
+        </div>
+        <span className={`v font-mono ${summary.pd4 > 0 ? "text-amber-700 dark:text-amber-400" : "text-foreground"}`}>
+          {summary.pd4}
+        </span>
+      </div>
+      <div className={`perio-stat ${summary.pd6 > 0 ? "border-rose-500/40 bg-rose-500/5 dark:bg-rose-500/10" : ""}`}>
+        <div className="flex items-center justify-between gap-1">
+          <span className="k">{t("جيوب ≥ 6 مم", "Pockets ≥ 6 mm")}</span>
+          {summary.pd6 > 0 && <Badge variant="bad" className="text-[10px] px-1.5 py-0">{summary.pd6}</Badge>}
+        </div>
+        <span className={`v font-mono ${summary.pd6 > 0 ? "text-rose-700 dark:text-rose-400" : "text-foreground"}`}>
+          {summary.pd6}
+        </span>
+      </div>
+      <div className="perio-stat">
+        <span className="k">{t("متوسط الارتباط", "Mean CAL")}</span>
+        <span className="v font-mono">{summary.meanCal === null ? "—" : `${summary.meanCal} ${t("مم", "mm")}`}</span>
+      </div>
+      <div className={`perio-stat ${(summary.maxCal ?? 0) >= 5 ? "border-rose-500/35" : ""}`}>
+        <span className="k">{t("أقصى فقد ارتباط", "Max CAL")}</span>
+        <span className="v font-mono">
+          {summary.maxCal === null ? "—" : `${summary.maxCal} ${t("مم", "mm")}`}
+        </span>
+      </div>
     </div>
   );
 
   const legend = (
-    <p className="small muted perio-legend">
-      <span className="lg ok" />{t("1–3 مم", "1–3 mm")} <span className="lg warn" />{t("4–5 مم", "4–5 mm")} <span className="lg deep" />{t("6 مم فأكثر", "6 mm +")}
-      {" · "}<span className="lg gm" />{t("حافة اللثة", "gingival margin")} <span className="lg cal" />{t("مستوى الارتباط", "attachment level")}
-      {" · "}{t("حافة اللثة: موجب = فوق ملتقى المينا بالملاط (تضخم)، سالب = انحسار. الارتباط = العمق − الحافة.",
-        "Margin: positive = coronal to the CEJ (overgrowth), negative = recession. CAL = depth − margin.")}
-    </p>
+    <div className="perio-legend w-full max-w-full min-w-0 flex flex-wrap items-center gap-3 text-xs text-muted-foreground p-3 rounded-lg border border-border/40 bg-surface-2/40" dir={ar ? "rtl" : "ltr"}>
+      <div className="flex items-center gap-1.5">
+        <span className="lg ok inline-block w-2.5 h-2.5 rounded bg-emerald-500" />
+        <span className="font-medium text-foreground">{t("1–3 مم", "1–3 mm")}</span>
+        <span className="text-muted-foreground">({t("عمق طبيعي", "normal depth")})</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="lg warn inline-block w-2.5 h-2.5 rounded bg-amber-500" />
+        <span className="font-medium text-foreground">{t("4–5 مم", "4–5 mm")}</span>
+        <span className="text-muted-foreground">({t("جيب متوسط", "moderate pocket")})</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="lg deep inline-block w-2.5 h-2.5 rounded bg-rose-500" />
+        <span className="font-medium text-foreground">{t("6 مم فأكثر", "6 mm +")}</span>
+        <span className="text-muted-foreground">({t("جيب عميق", "deep pocket")})</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="lg gm inline-block w-3.5 h-0.5 rounded bg-sky-500" />
+        <span className="font-medium text-foreground">{t("حافة اللثة", "gingival margin")}</span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="lg cal inline-block w-3.5 h-0.5 rounded bg-rose-500" />
+        <span className="font-medium text-foreground">{t("مستوى الارتباط (CAL)", "attachment level (CAL)")}</span>
+      </div>
+      <div className="w-full text-[11px] text-muted-foreground pt-1 border-t border-border/30">
+        {t("حافة اللثة: موجب = فوق ملتقى المينا بالملاط (تضخم)، سالب = انحسار. الارتباط = العمق − الحافة.",
+          "Margin: positive = coronal to the CEJ (overgrowth), negative = recession. CAL = depth − margin.")}
+      </div>
+    </div>
   );
 
-  if (readOnly) return <div className="perio">{stats}{arch("upper")}{arch("lower")}{legend}</div>;
+  if (readOnly) return <div className="perio w-full max-w-full min-w-0">{stats}{arch("upper")}{arch("lower")}{legend}</div>;
 
   const h = edit!.header;
   return (
-    <form action={formAction} className="perio" id="perio-form">
+    <form action={formAction} className="perio w-full max-w-full min-w-0" id="perio-form">
       {Object.entries(edit!.hidden).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
       <input type="hidden" name="_id" value={examId} />
       <input type="hidden" name="teeth" value={payload} />
       <input type="hidden" name="_finalize" defaultValue="0" ref={finalizeRef} />
-      <div className="grid cols-4 perio-head">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 perio-head w-full max-w-full min-w-0">
         <div className="field"><label htmlFor="pe-date">{t("تاريخ الفحص", "Exam date")}</label><input id="pe-date" name="exam_date" type="date" required max={edit!.today} defaultValue={h.exam_date} /></div>
         <div className="field"><label htmlFor="pe-examiner">{t("الفاحص", "Examiner")}</label><input id="pe-examiner" name="examiner_name" maxLength={200} defaultValue={h.examiner_name} readOnly={edit!.examinerLocked} /></div>
         <div className="field"><label htmlFor="pe-facility">{t("المنشأة", "Facility")}</label><input id="pe-facility" name="facility_name" maxLength={200} defaultValue={h.facility_name} /></div>
@@ -358,11 +442,17 @@ export function PerioChart({ lang, teeth, edit }: PerioChartProps) {
         {form?.ok && form.message && <p className="form-msg ok">{form.message}</p>}
       </div>
       <div className="row gap">
-        <SubmitButton className="btn" pending={t("جارٍ الحفظ…", "Saving…")}>{t("حفظ المسودة", "Save draft")}</SubmitButton>
-        <button type="submit" className="btn primary" onClick={(e) => {
+        <SubmitButton className="btn inline-flex items-center gap-1.5" pending={t("جارٍ الحفظ…", "Saving…")}>
+          <Save size={15} aria-hidden="true" />
+          <span>{t("حفظ المسودة", "Save draft")}</span>
+        </SubmitButton>
+        <button type="submit" className="btn primary inline-flex items-center gap-1.5" onClick={(e) => {
           if (!window.confirm(t("بعد الاعتماد لا يُعدَّل المخطط (يمكن إبطاله بسبب فقط). اعتماد الآن؟", "A final chart is not edited (it can only be invalidated with a reason). Finalise now?"))) { e.preventDefault(); return; }
           if (finalizeRef.current) finalizeRef.current.value = "1";
-        }}>{t("اعتماد المخطط", "Finalise the chart")}</button>
+        }}>
+          <CheckCircle2 size={15} aria-hidden="true" />
+          <span>{t("اعتماد المخطط", "Finalise the chart")}</span>
+        </button>
       </div>
     </form>
   );

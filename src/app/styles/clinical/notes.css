@@ -1,0 +1,46 @@
+/* =====================================================================
+   Clinical Notes & Amendments
+   Signed notes, addenda, template pickers, and recall flags.
+   ===================================================================== */
+.note-sign {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  color: hsl(var(--sb-brand-600));
+  margin: .3rem 0 0;
+}
+
+.amendment {
+  border-inline-start: 3px solid var(--sb-input);
+  background: var(--sb-muted);
+  padding: .4rem .65rem;
+  border-radius: var(--radius-sm);
+  margin-block-start: .45rem;
+}
+
+.amendment .rec-body {
+  margin: .25rem 0 0;
+}
+
+.template-pick label {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+}
+
+.tooth-list li.fu-overdue {
+  border-inline-start-color: var(--bad);
+}
+
+.tooth-list li.fu-due_soon {
+  border-inline-start-color: var(--warn);
+}
+
+.tooth-list li.fu-undated {
+  border-inline-start-color: var(--info);
+}
+
+.tooth-list li.recall .row {
+  flex-wrap: wrap;
+}
+

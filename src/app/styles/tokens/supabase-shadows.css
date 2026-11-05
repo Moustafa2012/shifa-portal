@@ -1,0 +1,37 @@
+/* =====================================================================
+   Supabase design tokens — button & surface shadows and elevation
+   Ported verbatim from supabase/supabase (compat.css, themes).
+   ===================================================================== */
+:root {
+  --sb-button-shadow-opacity: 0.04;
+  --sb-button-edge-strength: calc(var(--sb-contrast-border, 0.275625) / 0.275625 * 0.6);
+  --sb-button-edge-color: var(--sb-colors-black);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sb-button-shadow-opacity: 0.2;
+    --sb-button-edge-strength: calc(var(--sb-contrast-border, 0.275625) / 0.275625);
+    --sb-button-edge-color: var(--sb-colors-white);
+  }
+}
+
+:root[data-theme="dark"] {
+  --sb-button-shadow-opacity: 0.2;
+  --sb-button-edge-strength: calc(var(--sb-contrast-border, 0.275625) / 0.275625);
+  --sb-button-edge-color: var(--sb-colors-white);
+}
+
+:root {
+  --sb-button-shadow-drop: 0 1px 3px 0 hsl(var(--sb-colors-black) / var(--sb-button-shadow-opacity));
+  --sb-button-shadow-raised: var(--sb-button-shadow-drop),
+    inset 0 1px 0 0 hsl(var(--sb-button-edge-color) / calc(0.04 * var(--sb-button-edge-strength))),
+    inset 0 0 0 1px hsl(var(--sb-button-edge-color) / calc(0.06 * var(--sb-button-edge-strength))),
+    inset 0 0 0 1px hsl(var(--sb-button-edge-color) / calc(0.1 * var(--sb-button-edge-strength)));
+  --sb-button-shadow-default: var(--sb-button-shadow-drop),
+    inset 0 1px 0 0 hsl(var(--sb-button-edge-color) / calc(0.04 * var(--sb-button-edge-strength))),
+    inset 0 0 0 1px hsl(var(--sb-colors-black) / calc(0.06 * var(--sb-button-edge-strength))),
+    inset 0 -1px 0 0 hsl(var(--sb-colors-black) / calc(0.06 * var(--sb-button-edge-strength))),
+    inset 0 0 0 1px hsl(var(--sb-button-edge-color) / calc(0.1 * var(--sb-button-edge-strength)));
+}
+

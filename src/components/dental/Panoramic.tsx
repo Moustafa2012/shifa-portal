@@ -31,10 +31,15 @@ import {
 import { lbl } from "@/lib/labels";
 import { apexOf, archLayout, mirrorX, panoramicPairs, rootPath, smile, toothShape } from "@/lib/dental-anatomy";
 import { toothAriaLabel, type ChartTooth } from "./Odontogram";
-import { Chip } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
 
-const MARGIN = 20, LABEL = 32, SPAN = 124, MID = 10;
-const BLOCK_H = LABEL + SPAN + MID + SPAN + LABEL;
+const MARGIN = 20;
+const HEADER_H = 46;
+const NUM_H = 38;
+const SPAN = 155;
+const MID = 30;
+const FOOTER_H = 46;
+const BLOCK_H = HEADER_H + NUM_H + SPAN + MID + SPAN + NUM_H + FOOTER_H;
 const LESION_CODES = new Set(["ABS", "PA", "NEC"]);
 
 /** Surface patches on a crown drawn as a lower tooth (+x mesial). Buccal and lingual face the viewer and the back. */
@@ -134,6 +139,8 @@ export function Panoramic({
   selected,
   onSelect,
   idPrefix = "pano",
+  filter: externalFilter,
+  onFilter: externalOnFilter,
 }: {
   dentition: Dentition;
   teeth: Record<number, ChartTooth>;
@@ -141,10 +148,14 @@ export function Panoramic({
   selected?: number | null;
   onSelect?: (t: number) => void;
   idPrefix?: string;
+  filter?: string | null;
+  onFilter?: (filter: string | null) => void;
 }) {
   const refs = useRef(new Map<number, SVGGElement>());
   const [hovered, setHovered] = useState<number | null>(null);
-  const [filter, setFilter] = useState<string | null>(null);
+  const [internalFilter, setInternalFilter] = useState<string | null>(null);
+  const filter = externalFilter !== undefined ? externalFilter : internalFilter;
+  const setFilter = externalOnFilter ?? setInternalFilter;
   const [zoomWide, setZoomWide] = useState<boolean>(false);
 
   const ar = lang === "ar";
@@ -153,16 +164,23 @@ export function Panoramic({
   const archW = (l: { cx: number; w: number }[]) => (l.length ? l[l.length - 1].cx + l[l.length - 1].w / 2 : 0);
   const W = Math.max(...layouts.flatMap(([u, l]) => [archW(u), archW(l)])) + MARGIN * 2;
   const H = BLOCK_H * pairs.length;
+  const isPrim = dentition === "primary";
+  const qUR = isPrim ? "Q5 · UR" : "Q1 · UR";
+  const qUL = isPrim ? "Q6 · UL" : "Q2 · UL";
+  const qLR = isPrim ? "Q8 · LR" : "Q4 · LR";
+  const qLL = isPrim ? "Q7 · LL" : "Q3 · LL";
 
   // every row as absolute x positions, for drawing and for the arrow keys
   const rows = layouts.flatMap(([u, l], bi) =>
     [u, l].map((arch, ai) => {
       const off = MARGIN + (W - MARGIN * 2 - archW(arch)) / 2;
-      const occ = bi * BLOCK_H + LABEL + SPAN + (ai === 1 ? MID : 0);
+      const blockTop = bi * BLOCK_H;
+      const occUpper = blockTop + HEADER_H + NUM_H + SPAN;
+      const occ = ai === 0 ? occUpper : occUpper + MID;
       return {
         upper: ai === 0,
         occ,
-        top: bi * BLOCK_H,
+        top: blockTop,
         teeth: arch.map((x) => ({ tooth: x.tooth, cx: off + x.cx, w: x.w })),
       };
     })
@@ -197,6 +215,73 @@ export function Panoramic({
       }
     }
     return { examined, problems, work, absent, planned, total: all.length };
+  }, [all, teeth]);
+
+  // Live condition counts for filter pills in toolbar
+  const filterCounts = useMemo(() => {
+    let problems = 0, disease = 0, work = 0, rct = 0, missing = 0, planned = 0;
+    for (const t of all) {
+      const d = teeth[t];
+      if (!d) continue;
+      const fs = d.findings ?? [];
+      const kinds = new Set(fs.map((f) => f.kind));
+      const probs = d.links?.problems ?? [];
+      const status = d.status;
+
+      if (probs.length > 0) problems++;
+      if (
+        kinds.has("caries") ||
+        kinds.has("secondary_caries") ||
+        kinds.has("fracture") ||
+        kinds.has("crack") ||
+        kinds.has("wear") ||
+        kinds.has("defective_restoration") ||
+        kinds.has("retained_root")
+      ) {
+        disease++;
+      }
+      if (
+        kinds.has("filling") ||
+        kinds.has("crown") ||
+        kinds.has("bridge_abutment") ||
+        kinds.has("bridge_pontic") ||
+        kinds.has("inlay_onlay") ||
+        kinds.has("veneer") ||
+        kinds.has("denture") ||
+        kinds.has("ortho_appliance")
+      ) {
+        work++;
+      }
+      if (
+        kinds.has("root_canal") ||
+        kinds.has("post_core") ||
+        kinds.has("periapical_lesion") ||
+        kinds.has("abscess") ||
+        probs.some((p) => LESION_CODES.has(p.code))
+      ) {
+        rct++;
+      }
+      if (
+        (status != null && ABSENT_STATUSES.has(status)) ||
+        kinds.has("implant") ||
+        status === "unerupted" ||
+        status === "impacted"
+      ) {
+        missing++;
+      }
+      if ((d.links?.planned ?? 0) > 0) {
+        planned++;
+      }
+    }
+    return {
+      all: all.length,
+      problems,
+      disease,
+      work,
+      rct,
+      missing,
+      planned,
+    };
   }, [all, teeth]);
 
   const move = (tooth: number, dr: number, di: number) => {
@@ -247,53 +332,58 @@ export function Panoramic({
   };
 
   return (
-    <div className={`pano-container pano ${zoomWide ? "zoom-wide" : ""}`} dir="ltr">
+    <div className={`pano-container pano ${zoomWide ? "zoom-wide" : ""}`} dir={ar ? "rtl" : "ltr"}>
       {/* Top Clinical Inspection HUD */}
-      <div className="pano-hud" role="region" aria-label={ar ? "معلومات السن المحدد" : "Inspected tooth details"}>
+      <div
+        className="pano-hud"
+        role="region"
+        aria-label={ar ? "معلومات السن المحدد" : "Inspected tooth details"}
+        dir={ar ? "rtl" : "ltr"}
+      >
         {activeTooth ? (
           <div className="pano-hud-target">
-            <span className="chip info" style={{ fontWeight: 700 }}>
-              {activeTooth}
-            </span>
-            <span className="chip muted small">
-              {quadrantInfo(activeTooth, lang).code} · {quadrantInfo(activeTooth, lang).name}
-            </span>
-            <strong>{toothName(activeTooth, lang)}</strong>
+            <Badge variant="info" className="font-mono text-xs font-bold px-2 py-0.5">
+              <bdi>{activeTooth}</bdi>
+            </Badge>
+            <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
+              <bdi>{quadrantInfo(activeTooth, lang).code}</bdi> · {quadrantInfo(activeTooth, lang).name}
+            </Badge>
+            <strong className="text-sm font-semibold text-foreground">{toothName(activeTooth, lang)}</strong>
             {activeData?.status && (
-              <Chip tone={ABSENT_STATUSES.has(activeData.status) ? "bad" : "muted"}>
+              <Badge variant={ABSENT_STATUSES.has(activeData.status) ? "bad" : "muted"}>
                 {lbl(TOOTH_STATUS, activeData.status, lang)}
-              </Chip>
+              </Badge>
             )}
             {activeData?.findings?.map((f, i) => (
-              <span key={i} className="chip warn small">
+              <Badge key={i} variant="warn">
                 {lbl(FINDING_KIND, f.kind, lang)}
                 {f.surfaces?.length ? ` (${fmtSurfaces(f.surfaces, activeTooth)})` : ""}
-              </span>
+              </Badge>
             ))}
             {activeData?.links?.problems?.map((p, i) => (
-              <span key={i} className="chip bad small">
+              <Badge key={i} variant="bad">
                 {ar ? `تشخيص: ${p.name}` : `Problem: ${p.name}`}
-              </span>
+              </Badge>
             ))}
             {(activeData?.links?.planned ?? 0) > 0 && (
-              <span className="chip warn small">
+              <Badge variant="warn">
                 {ar ? `خطة علاج (${activeData!.links!.planned})` : `Planned (${activeData!.links!.planned})`}
-              </span>
+              </Badge>
             )}
             {selected === activeTooth ? (
-              <span className="chip ok small">
-                <Check size={12} aria-hidden="true" />
+              <Badge variant="ok">
+                <Check size={12} aria-hidden="true" className={ar ? "ms-0.5" : "me-0.5"} />
                 {ar ? "محدد حالياً" : "Selected"}
-              </span>
+              </Badge>
             ) : (
-              <span className="small muted">
+              <span className="text-xs text-muted-foreground">
                 {ar ? "انقر للتحديد وتعديل الفحص" : "Click to select for editing"}
               </span>
             )}
           </div>
         ) : (
           <div className="pano-hud-target">
-            <span className="small muted row" style={{ gap: ".35rem", alignItems: "center" }}>
+            <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
               <Compass size={14} aria-hidden="true" />
               <span>{ar ? "مرر المؤشر أو استخدم الأسهم للتنقل السريع بين الأسنان" : "Hover or use arrow keys to inspect teeth"}</span>
             </span>
@@ -301,47 +391,47 @@ export function Panoramic({
         )}
 
         <div className="pano-hud-stats">
-          <span className="chip muted small">
+          <Badge variant="secondary" className="text-xs">
             {ar ? `المفحوصة: ${stats.examined}/${stats.total}` : `Examined: ${stats.examined}/${stats.total}`}
-          </span>
+          </Badge>
           {stats.problems > 0 && (
-            <span className="chip bad small">
+            <Badge variant="bad" className="text-xs">
               {ar ? `مشاكل: ${stats.problems}` : `Problems: ${stats.problems}`}
-            </span>
+            </Badge>
           )}
           {stats.work > 0 && (
-            <span className="chip info small">
+            <Badge variant="info" className="text-xs">
               {ar ? `علاجات: ${stats.work}` : `Restored: ${stats.work}`}
-            </span>
+            </Badge>
           )}
           {stats.absent > 0 && (
-            <span className="chip muted small">
+            <Badge variant="muted" className="text-xs">
               {ar ? `مفقودة: ${stats.absent}` : `Missing: ${stats.absent}`}
-            </span>
+            </Badge>
           )}
           {stats.planned > 0 && (
-            <span className="chip warn small">
+            <Badge variant="warn" className="text-xs">
               {ar ? `مخططة: ${stats.planned}` : `Planned: ${stats.planned}`}
-            </span>
+            </Badge>
           )}
         </div>
       </div>
 
       {/* Panoramic Clinical Filters and View Controls Toolbar */}
-      <div className="pano-toolbar">
+      <div className="pano-toolbar" dir={ar ? "rtl" : "ltr"}>
         <div className="pano-filters" role="group" aria-label={ar ? "تصفية الحالات" : "Clinical filters"}>
-          <span className="small muted row" style={{ gap: ".25rem", marginInlineEnd: ".25rem", alignItems: "center" }}>
+          <span className="text-xs text-muted-foreground inline-flex items-center gap-1 me-1">
             <Filter size={13} aria-hidden="true" />
             <span>{ar ? "إبراز:" : "Highlight:"}</span>
           </span>
           {[
-            { id: "all", label: ar ? "الكل" : "All" },
-            { id: "problems", label: ar ? "تشخيصات ومشاكل" : "Problems" },
-            { id: "disease", label: ar ? "تسوس وأمراض" : "Caries/Disease" },
-            { id: "work", label: ar ? "حشوات وتيجان" : "Restorations" },
-            { id: "rct", label: ar ? "عصب وذروة" : "Endo/Apical" },
-            { id: "missing", label: ar ? "مفقود ومطمور" : "Missing/Gaps" },
-            { id: "planned", label: ar ? "علاج مخطط" : "Planned Tx" },
+            { id: "all", label: ar ? "الكل" : "All", count: filterCounts.all },
+            { id: "problems", label: ar ? "تشخيصات ومشاكل" : "Problems", count: filterCounts.problems },
+            { id: "disease", label: ar ? "تسوس وأمراض" : "Caries/Disease", count: filterCounts.disease },
+            { id: "work", label: ar ? "حشوات وتيجان" : "Restorations", count: filterCounts.work },
+            { id: "rct", label: ar ? "عصب وذروة" : "Endo/Apical", count: filterCounts.rct },
+            { id: "missing", label: ar ? "مفقود ومطمور" : "Missing/Gaps", count: filterCounts.missing },
+            { id: "planned", label: ar ? "علاج مخطط" : "Planned Tx", count: filterCounts.planned },
           ].map((btn) => (
             <button
               key={btn.id}
@@ -350,12 +440,13 @@ export function Panoramic({
               aria-pressed={(filter === null && btn.id === "all") || filter === btn.id}
               onClick={() => setFilter(btn.id === "all" ? null : filter === btn.id ? null : btn.id)}
             >
-              {btn.label}
+              <span>{btn.label}</span>
+              <span className="pano-filter-count font-mono"><bdi>{btn.count}</bdi></span>
             </button>
           ))}
         </div>
 
-        <div className="row" style={{ gap: ".35rem" }}>
+        <div className="inline-flex items-center gap-1.5">
           <button
             type="button"
             className="pano-zoom-btn"
@@ -369,20 +460,21 @@ export function Panoramic({
         </div>
       </div>
 
-      {/* Orientation Bar */}
-      <div className="odonto-sides" aria-hidden="true">
-        <span>{ar ? "يمين المريض (R)" : "Patient's right (R)"}</span>
-        <span>{ar ? "بانوراما تخطيطية — ليست صورة أشعة رسمية" : "Schematic panoramic — not an official radiograph"}</span>
-        <span>{ar ? "يسار المريض (L)" : "Patient's left (L)"}</span>
+      {/* Orientation Bar (Fixed LTR: patient's right is on the left, patient's left on the right) */}
+      <div className="odonto-sides" dir="ltr" style={{ direction: "ltr" }} aria-hidden="true">
+        <span className="font-medium text-xs text-foreground/85">{ar ? "يمين المريض (R)" : "Patient's right (R)"}</span>
+        <span className="text-xs text-muted-foreground">{ar ? "بانوراما تخطيطية — ليست صورة أشعة رسمية" : "Schematic panoramic — not an official radiograph"}</span>
+        <span className="font-medium text-xs text-foreground/85">{ar ? "يسار المريض (L)" : "Patient's left (L)"}</span>
       </div>
 
-      {/* SVG Canvas */}
-      <div className="odonto-scroll">
+      {/* SVG Canvas (Fixed LTR viewport for anatomical accuracy) */}
+      <div className="min-h-auto odonto-scroll" dir="ltr" style={{ direction: "ltr" }}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="pano-svg"
           role="grid"
           aria-label={ar ? "مخطط بانورامي للأسنان: يمين المريض على اليسار" : "Panoramic tooth chart: patient's right on the left"}
+          style={{ direction: "ltr" }}
         >
           <defs>
             <pattern
@@ -413,26 +505,26 @@ export function Panoramic({
           })}
 
           {/* Midline vertical axis and anatomical label */}
-          <line x1={W / 2} y1={6} x2={W / 2} y2={H - 6} className="pano-mid" />
-          <text x={W / 2} y={15} className="pano-midline-label">
+          <line x1={W / 2} y1={8} x2={W / 2} y2={H - 8} className="pano-mid" />
+          <text x={W / 2} y={38} className="pano-midline-label">
             {ar ? "خط المنتصف" : "MIDLINE"}
           </text>
-          <text x={W / 2} y={H - 10} className="pano-midline-label">
+          <text x={W / 2} y={H - 32} className="pano-midline-label">
             {ar ? "خط المنتصف" : "MIDLINE"}
           </text>
 
           {/* Quadrant and Arch Perimeter Labels */}
-          <text x={MARGIN + 6} y={16} className="pano-quad-label">Q1 · UR</text>
-          <text x={W - MARGIN - 46} y={16} className="pano-quad-label">Q2 · UL</text>
-          <text x={MARGIN + 6} y={H - 12} className="pano-quad-label">Q4 · LR</text>
-          <text x={W - MARGIN - 46} y={H - 12} className="pano-quad-label">Q3 · LL</text>
+          <text x={MARGIN + 8} y={22} textAnchor="start" className="pano-quad-label">{qUR}</text>
+          <text x={W - MARGIN - 8} y={22} textAnchor="end" className="pano-quad-label">{qUL}</text>
+          <text x={MARGIN + 8} y={H - 16} textAnchor="start" className="pano-quad-label">{qLR}</text>
+          <text x={W - MARGIN - 8} y={H - 16} textAnchor="end" className="pano-quad-label">{qLL}</text>
 
           {/* Arch Titles */}
           {rows.map((row, ri) => (
             <text
               key={`arch-title-${ri}`}
               x={W / 2}
-              y={row.upper ? row.top + 16 : row.occ + SPAN + 34}
+              y={row.upper ? row.top + 22 : row.top + BLOCK_H - 16}
               className="pano-arch-label"
               opacity={0.4}
             >
@@ -489,10 +581,10 @@ export function Panoramic({
                 status === "unerupted"
                   ? ch * 1.15
                   : status === "impacted"
-                  ? ch * 0.95
-                  : status === "partially_erupted"
-                  ? ch * 0.5
-                  : 0;
+                    ? ch * 0.95
+                    : status === "partially_erupted"
+                      ? ch * 0.5
+                      : 0;
               const tilt = status === "impacted" ? 32 : 0;
               const occ = row.occ + smile(cx, W);
               const sy = row.upper ? -1 : 1, sx = mirrorX(tooth);
@@ -504,7 +596,8 @@ export function Panoramic({
               const isMatched = toothMatchesFilter(data, filter);
               const clip = `${idPrefix}-clip-${tooth}`;
               const nProc = data?.links?.procedures ?? 0, nImg = data?.links?.images ?? 0;
-              const numY = row.upper ? row.top + 13 : row.occ + SPAN + 21;
+              const numY = row.upper ? row.top + HEADER_H + 16 : row.occ + SPAN + 26;
+              const codesY = row.upper ? row.top + HEADER_H + 28 : row.occ + SPAN + 12;
               const codes = [...new Set(problems.map((p) => p.code))].slice(0, 2).join("·");
 
               return (
@@ -516,11 +609,9 @@ export function Panoramic({
                   }}
                   id={`${idPrefix}-${tooth}`}
                   data-tooth={tooth}
-                  className={`ptooth${status == null && !fs.length && !problems.length ? " nodata" : ""}${
-                    problems.length ? " problem" : ""
-                  }${isSel ? " sel" : ""}${!isMatched ? " dimmed" : ""}${
-                    filter && isMatched ? " highlighted" : ""
-                  }`}
+                  className={`ptooth${status == null && !fs.length && !problems.length ? " nodata" : ""}${problems.length ? " problem" : ""
+                    }${isSel ? " sel" : ""}${!isMatched ? " dimmed" : ""}${filter && isMatched ? " highlighted" : ""
+                    }`}
                   role="gridcell"
                   tabIndex={tooth === focusable ? 0 : -1}
                   aria-selected={isSel}
@@ -587,9 +678,8 @@ export function Panoramic({
                         {implant && (
                           <g className="implant">
                             <path
-                              d={`M ${-0.17 * w},${ch - 2} L ${0.17 * w},${ch - 2} L ${0.12 * w},${
-                                ch + maxL * 0.9
-                              } L ${-0.12 * w},${ch + maxL * 0.9} Z`}
+                              d={`M ${-0.17 * w},${ch - 2} L ${0.17 * w},${ch - 2} L ${0.12 * w},${ch + maxL * 0.9
+                                } L ${-0.12 * w},${ch + maxL * 0.9} Z`}
                             />
                             {Array.from({ length: 6 }, (_, i) => ch + 5 + (i * (maxL * 0.8)) / 6).map((y, i) => (
                               <line
@@ -662,9 +752,8 @@ export function Panoramic({
 
                     {/* Gum line with recession contour */}
                     <path
-                      d={`M ${-w / 2},${ch + (recession ? 14 : 4)} Q 0,${
-                        ch + (recession ? 7 : -3)
-                      } ${w / 2},${ch + (recession ? 14 : 4)}`}
+                      d={`M ${-w / 2},${ch + (recession ? 14 : 4)} Q 0,${ch + (recession ? 7 : -3)
+                        } ${w / 2},${ch + (recession ? 14 : 4)}`}
                       className={`gum${recession ? " receded" : ""}`}
                     />
 
@@ -693,7 +782,7 @@ export function Panoramic({
                     {tooth}
                   </text>
                   {codes && (
-                    <text x={cx} y={row.upper ? numY + 11 : numY - 13} className="ptooth-code">
+                    <text x={cx} y={codesY} className="ptooth-code">
                       {codes}
                     </text>
                   )}
@@ -760,12 +849,16 @@ export function PanoLegend({
     const content = (
       <>
         <span className="row" style={{ gap: ".45rem", alignItems: "center" }}>
-          <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true" className="pano-legend-svg">
+          <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true" className="pano-legend-svg shrink-0">
             {svg}
           </svg>
-          <span>{text}</span>
+          <span className="text-xs truncate">{text}</span>
         </span>
-        {count != null && count > 0 && <span className="pano-legend-badge">{count}</span>}
+        {count != null && count > 0 && (
+          <span className="pano-legend-badge font-mono shrink-0">
+            <bdi>{count}</bdi>
+          </span>
+        )}
       </>
     );
 
@@ -787,7 +880,7 @@ export function PanoLegend({
   };
 
   return (
-    <div className="pano-legend-grid">
+    <div className="pano-legend-grid" dir={ar ? "rtl" : "ltr"}>
       {/* Group 1: Pathology & Open Problems */}
       <div className="pano-legend-sec">
         <h5 className="pano-legend-head">{ar ? "تشخيص وأمراض" : "Pathology & Problems"}</h5>

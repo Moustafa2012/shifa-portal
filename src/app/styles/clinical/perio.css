@@ -1,0 +1,444 @@
+/* =====================================================================
+   Periodontal Chart (Phase D & AAP/EFP Diagnosis)
+   Dense numeric charting grid, probing depths, SVG graph, and diagnosis.
+   ===================================================================== */
+.perio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+.perio-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.perio-stat {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .5rem .7rem;
+  display: grid;
+  gap: .1rem;
+  min-width: 0;
+}
+
+.perio-stat .k {
+  font-size: .75rem;
+  color: var(--muted);
+}
+
+.perio-stat .v {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+.perio-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow-x: auto;
+  position: relative;
+  max-width: 100%;
+  width: 100%;
+  min-width: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.perio-wrap .odonto-sides {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface-2);
+  border-block-end: 1px solid var(--border);
+  min-width: 1010px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.perio-wrap .odonto-sides-sticky {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  width: 96px;
+  min-width: 96px;
+  max-width: 96px;
+  background-color: var(--sb-popover);
+  border-inline-end: 1px solid var(--border);
+  box-shadow: 3px 0 6px -1px rgba(0, 0, 0, 0.28);
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.perio-wrap .odonto-sides-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1;
+  padding: .4rem .65rem;
+  font-size: .75rem;
+}
+
+table.perio-chart {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  min-width: 1010px;
+  width: 100%;
+  font-size: .78rem;
+}
+
+table.perio-chart col.pc-label-col {
+  width: 96px;
+}
+
+table.perio-chart th[scope="row"] {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  width: 96px;
+  min-width: 96px;
+  max-width: 96px;
+  box-sizing: border-box;
+  background-color: var(--sb-popover) !important;
+  color: var(--text);
+  font-weight: 600;
+  text-align: start;
+  padding: 0 .45rem;
+  white-space: nowrap;
+  border-inline-end: 1px solid var(--border);
+  box-shadow: 3px 0 6px -1px rgba(0, 0, 0, 0.28);
+  font-family: var(--font);
+}
+
+table.perio-chart td {
+  padding: 0;
+  text-align: center;
+  height: 22px;
+  border-inline-start: 1px solid transparent;
+}
+
+table.perio-chart td.pc-tooth {
+  border-inline-start: 1px solid var(--border);
+}
+
+table.perio-chart tr.pc-teeth th,
+table.perio-chart tr.pc-teeth td {
+  height: 26px;
+  border-block: 1px solid var(--border);
+}
+
+table.perio-chart tr.pc-teeth td {
+  font-family: var(--mono);
+  background: var(--surface-2);
+}
+
+table.perio-chart td.pc-site:nth-child(3n + 2) {
+  border-inline-start: 1px solid var(--border);
+}
+
+table.perio-chart .pc-site input {
+  width: 100%;
+  height: 22px !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none;
+  background: transparent;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: .8rem;
+  color: var(--text);
+}
+
+table.perio-chart .pc-site input:focus {
+  outline: 2px solid var(--sb-ring);
+  outline-offset: -2px;
+  box-shadow: inset 0 0 0 2px var(--sb-ring);
+  background: var(--accent-soft);
+}
+
+table.perio-chart .pc-site input[aria-invalid] {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+table.perio-chart tr.pc-pd td.warn,
+table.perio-chart td.pc-calv.warn {
+  color: var(--warn);
+  font-weight: 700;
+}
+
+table.perio-chart tr.pc-pd td.deep,
+table.perio-chart td.pc-calv.deep {
+  color: var(--bad);
+  font-weight: 700;
+  background: var(--bad-bg);
+}
+
+table.perio-chart tr.pc-pd td.warn input,
+table.perio-chart tr.pc-pd td.deep input {
+  color: inherit;
+  font-weight: 700;
+}
+
+table.perio-chart tr.pc-cal td {
+  font-family: var(--mono);
+  color: var(--muted);
+}
+
+table.perio-chart tr.pc-pd,
+table.perio-chart tr.pc-gm {
+  background: color-mix(in srgb, var(--surface-2) 40%, transparent);
+}
+
+table.perio-chart select {
+  height: 20px !important;
+  min-height: 0 !important;
+  padding: 0 2px !important;
+  background-image: none !important;
+  font-size: .7rem !important;
+  border-radius: var(--radius-sm);
+  width: 100% !important;
+  text-align: center;
+  text-align-last: center;
+  font-family: var(--mono);
+}
+
+table.perio-chart tr.pc-furc select {
+  display: block;
+  width: 100% !important;
+}
+
+table.perio-chart tr.pc-furc select + select {
+  margin-block-start: 1px;
+}
+
+table.perio-chart input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
+table.perio-chart td.is-missing {
+  background: repeating-linear-gradient(135deg, transparent 0 4px, var(--surface-2) 4px 8px);
+}
+
+/* Dots: BOP, Plaque, Suppuration */
+.pc-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+button.pc-dot:hover {
+  border-color: var(--text);
+}
+
+.pc-dot.bop.on {
+  background: var(--bad);
+  border-color: var(--bad);
+}
+
+.pc-dot.plaque.on {
+  background: hsl(var(--sb-warning-600));
+  border-color: hsl(var(--sb-warning-600));
+}
+
+.pc-dot.supp.on {
+  background: oklch(0.75 0.15 95);
+  border-color: oklch(0.6 0.15 95);
+}
+
+.pc-furc-v,
+.pc-mob {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--warn);
+  margin-inline: .1rem;
+}
+
+/* Periodontal SVG Graph */
+tr.pc-graph td {
+  height: 58px;
+  vertical-align: middle;
+}
+
+.perio-svg {
+  display: block;
+  width: 100%;
+  height: 56px;
+}
+
+.perio-svg .perio-root {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: .6;
+}
+
+.perio-svg .perio-root.implant {
+  fill: color-mix(in srgb, var(--sb-foreground) 12%, transparent);
+  stroke-dasharray: 2 1.5;
+}
+
+.perio-svg .perio-cej {
+  stroke: var(--lighter);
+  stroke-width: .6;
+  stroke-dasharray: 2 2;
+}
+
+.perio-svg .perio-pocket {
+  stroke: var(--ok);
+  stroke-width: 4;
+  stroke-linecap: butt;
+  opacity: .55;
+}
+
+.perio-svg .perio-pocket.warn {
+  stroke: hsl(var(--sb-warning-600));
+  opacity: .75;
+}
+
+.perio-svg .perio-pocket.deep {
+  stroke: var(--bad);
+  opacity: .85;
+}
+
+.perio-svg .perio-gm {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.3;
+}
+
+.perio-svg .perio-cal {
+  fill: none;
+  stroke: var(--bad);
+  stroke-width: 1.1;
+}
+
+.perio-svg .perio-bop-dot {
+  fill: var(--bad);
+}
+
+.perio-svg .perio-missing {
+  stroke: var(--lighter);
+  stroke-width: 1.2;
+}
+
+.perio-legend .lg {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-inline: .35rem .2rem;
+  vertical-align: middle;
+}
+
+.perio-legend .lg.ok { background: var(--ok); }
+.perio-legend .lg.warn { background: hsl(var(--sb-warning-600)); }
+.perio-legend .lg.deep { background: var(--bad); }
+.perio-legend .lg.gm { background: var(--accent); height: 3px; }
+.perio-legend .lg.cal { background: var(--bad); height: 3px; }
+
+.perio-auto label {
+  display: flex;
+  gap: .4rem;
+  align-items: center;
+  font-weight: 500;
+}
+
+.perio-draft-bar,
+.perio-shown-bar {
+  margin-block-end: var(--space-3);
+}
+
+.perio-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.perio-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .7rem .9rem;
+}
+
+.perio-item .row.wrap {
+  margin-block-start: .35rem;
+}
+
+.perio-invalidate {
+  margin-block-start: .4rem;
+}
+
+.perio-compare-form {
+  align-items: flex-end;
+  margin-block-end: var(--space-3);
+}
+
+/* Periodontal Diagnosis (2017 AAP/EFP) */
+.perio-dx {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3, .9rem);
+  margin-block: var(--space-3, .9rem);
+  display: grid;
+  gap: var(--space-2, .6rem);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.perio-dx legend {
+  font-weight: 700;
+  padding-inline: .4rem;
+}
+
+.perio-dx-suggest {
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: .6rem .8rem;
+  display: grid;
+  gap: .25rem;
+}
+
+.perio-dx-sug-line {
+  margin: 0;
+  font-weight: 700;
+}
+
+.perio-dx-reasons {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+}
+
+.perio-dx-view {
+  display: grid;
+  gap: .25rem;
+  margin-block: .4rem;
+}
+
+.perio-dx-line {
+  margin: 0;
+}
+
+.share-perio {
+  margin-block-start: .75rem;
+}
+

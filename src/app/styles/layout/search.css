@@ -1,0 +1,176 @@
+/* =====================================================================
+   App Shell Search Bar
+   Expandable search input in the top header with keyboard shortcut.
+   ===================================================================== */
+.shell-search-wrap {
+  position: relative;
+  inline-size: 14rem;
+  block-size: 2rem;
+  flex: none;
+}
+
+.shell-search-btn,
+.shell-search-close {
+  display: none;
+}
+
+.shell-search {
+  --control-h: 2rem;
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: 100%;
+  max-inline-size: calc(100vw - 2rem);
+  margin: 0;
+  display: block;
+  color: var(--muted);
+  transition: inline-size .15s ease-out;
+}
+
+.shell-search:focus-within {
+  inline-size: 22rem;
+  z-index: 2;
+}
+
+.shell-search-icon {
+  position: absolute;
+  inset-inline-start: .625rem;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--lighter);
+}
+
+.shell-search input[type=search] {
+  inline-size: 100%;
+  padding-inline: 2rem 2.25rem;
+  border: 1px solid var(--sb-input);
+  border-radius: var(--sb-radius-md);
+  background-color: var(--sb-field);
+  font-size: .8125rem;
+  color: var(--text);
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.shell-search input[type=search]:hover {
+  border-color: var(--sb-border-control-hover);
+}
+
+.shell-search input[type=search]:focus {
+  outline: none;
+  border-color: var(--sb-ring);
+  box-shadow: 0 0 0 2px oklch(from var(--sb-ring) l c h / 30%);
+  background-color: var(--sb-card);
+}
+
+.shell-search input[type=search]::-webkit-search-cancel-button,
+.shell-search input[type=search]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.shell-search-kbd {
+  position: absolute;
+  inset-inline-end: .5rem;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 1.125rem;
+  block-size: 1.125rem;
+  padding-inline: .25rem;
+  border: 1px solid var(--sb-input);
+  border-radius: 4px;
+  font: 500 .6875rem/1 var(--mono);
+  color: var(--lighter);
+  background: var(--sb-card);
+}
+
+.shell-search:focus-within .shell-search-kbd,
+.shell-search:has(input:not(:placeholder-shown)) .shell-search-kbd {
+  display: none;
+}
+
+/* Mobile Search Dialog Overlay */
+@media (max-width: 900px) {
+  .shell-search-wrap {
+    inline-size: 2rem;
+  }
+
+  .shell-search-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .shell-search-btn:hover {
+    color: var(--text);
+    background: var(--sb-accent);
+  }
+
+  .shell-search {
+    display: none;
+  }
+
+  .shell-search-wrap[data-open="true"] .shell-search {
+    display: block;
+    position: fixed;
+    inset: 0 0 auto 0;
+    inline-size: auto;
+    max-inline-size: none;
+    block-size: 3rem;
+    z-index: 60;
+    padding: .5rem .75rem;
+    background: var(--sb-background-dash-canvas);
+    border-block-end: 1px solid var(--sb-border);
+    box-sizing: border-box;
+  }
+
+  .shell-search-wrap[data-open="true"] .shell-search:focus-within {
+    inline-size: auto;
+  }
+
+  .shell-search-wrap[data-open="true"] .shell-search-icon {
+    inset-inline-start: 1.375rem;
+  }
+
+  .shell-search input[type=search] {
+    font-size: 16px;
+    padding-inline: 2rem 2.25rem;
+  }
+
+  .shell-search-kbd {
+    display: none;
+  }
+
+  .shell-search-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    inset-inline-end: 1rem;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+}
+

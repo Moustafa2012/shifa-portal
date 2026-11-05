@@ -1,0 +1,12 @@
+/* =====================================================================
+   Supabase Design Tokens
+   1. Core OKLCH variables & calculations
+   2. Light theme palette
+   3. Dark theme palette
+   4. Surface elevation & button shadows
+   ===================================================================== */
+@import "./supabase-core.css";
+@import "./supabase-light.css";
+@import "./supabase-dark.css";
+@import "./supabase-shadows.css";
+

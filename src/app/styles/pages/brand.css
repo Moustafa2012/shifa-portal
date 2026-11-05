@@ -1,0 +1,179 @@
+/* =====================================================================
+   Brand & Landing Pages
+   Hero section, trust elements, steps, and feature highlights.
+   ===================================================================== */
+.hero {
+  background: var(--sb-card);
+  color: var(--text);
+  border: 1px solid var(--sb-border);
+  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.75rem, 4vw, 3.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+  gap: 2rem;
+  align-items: center;
+}
+
+.hero h1 {
+  font-size: clamp(1.9rem, 1.2rem + 2.6vw, 3rem);
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -.02em;
+  margin-block-end: .9rem;
+}
+
+.hero p {
+  color: var(--muted);
+  font-size: 1.1rem;
+  max-width: 52ch;
+}
+
+.hero .btn {
+  min-width: 150px;
+}
+
+.hero .btn.primary {
+  background-color: var(--sb-primary-solid);
+  color: var(--sb-primary-solid-foreground);
+  box-shadow: var(--sb-button-shadow-raised);
+}
+
+.hero .btn.primary:hover {
+  background-color: var(--sb-primary-solid-hover);
+  color: var(--sb-primary-solid-foreground);
+}
+
+.hero .btn:not(.primary) {
+  background: var(--sb-card);
+  color: var(--text);
+  box-shadow: var(--sb-button-shadow-default);
+  border: 0;
+}
+
+.hero-art {
+  display: grid;
+  place-items: center;
+}
+
+.hero-art svg {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .3));
+  animation: float 7s ease-in-out infinite;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  padding: .25rem .75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .25);
+  margin-block-end: 1rem;
+}
+
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hero-art {
+    order: -1;
+  }
+  .hero-art svg {
+    max-width: 220px;
+  }
+}
+
+.section {
+  margin-block-start: clamp(2rem, 5vw, 3.5rem);
+}
+
+.section > h2 {
+  font-size: clamp(1.3rem, 1rem + 1vw, 1.7rem);
+  text-align: center;
+  margin-block-end: .35rem;
+}
+
+.section > .lead {
+  text-align: center;
+  color: var(--muted);
+  max-width: 60ch;
+  margin: 0 auto 1.5rem;
+}
+
+.feature .ficon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-block-end: .75rem;
+}
+
+.steps {
+  counter-reset: step;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+  margin: 0;
+}
+
+.steps li {
+  counter-increment: step;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.1rem 1.1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.steps li::before {
+  content: counter(step);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--sb-secondary);
+  color: var(--text);
+  border: 1px solid var(--sb-border);
+  font-weight: 700;
+  margin-block-end: .6rem;
+}
+
+.trust {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: .75rem 1.25rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.trust div {
+  display: flex;
+  gap: .6rem;
+  align-items: flex-start;
+  font-size: .92rem;
+}
+
+.trust svg {
+  flex: none;
+  color: var(--accent);
+  margin-block-start: 3px;
+}
+

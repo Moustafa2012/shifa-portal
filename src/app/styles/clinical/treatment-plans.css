@@ -1,0 +1,119 @@
+/* =====================================================================
+   Treatment Plans
+   Multi-phase treatment plans, procedures, progress bars, and tabs.
+   ===================================================================== */
+.plan-card {
+  border: 1px solid var(--sb-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  background: var(--sb-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.plan-card.closed {
+  opacity: .85;
+}
+
+.plan-card h3 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  align-items: center;
+  font-size: 1.05rem;
+}
+
+.plan-progress {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-block: .6rem;
+}
+
+.plan-progress .bar {
+  flex: 1;
+  block-size: 8px;
+  background: var(--sb-muted);
+  border-radius: 99px;
+  overflow: hidden;
+  border: 1px solid var(--sb-border);
+}
+
+.plan-progress .bar span {
+  display: block;
+  block-size: 100%;
+  background: hsl(var(--sb-brand-default));
+}
+
+.plan-phase h4 {
+  margin: .6rem 0 .35rem;
+  font-size: .9rem;
+  color: var(--muted);
+}
+
+/* Treatment Plan Items & Statuses */
+.treat-item.st-completed {
+  border-inline-start-color: var(--ok);
+}
+
+.treat-item.st-cancelled {
+  opacity: .65;
+}
+
+.treat-item.st-scheduled,
+.treat-item.st-in_progress {
+  border-inline-start-color: var(--info);
+}
+
+.treat-item.st-proposed,
+.treat-item.st-planned,
+.treat-item.st-accepted {
+  border-inline-start-color: var(--warn);
+}
+
+.plan-total {
+  margin-block: .5rem 0;
+  font-weight: 600;
+}
+
+.surgical-confirm {
+  background: hsl(var(--sb-warning-200));
+  border: 1px solid hsl(var(--sb-warning-400));
+  padding: .5rem .6rem;
+  border-radius: var(--sb-radius-md);
+}
+
+.dental-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin-block-end: 1rem;
+}
+
+.dental-tabs a {
+  padding: .45rem .9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text);
+  background: var(--surface);
+  font-size: .92rem;
+}
+
+.dental-tabs a[aria-current="page"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.unassigned li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: .5rem .7rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  margin-block-end: .4rem;
+}
+

@@ -1,0 +1,135 @@
+/* =====================================================================
+   Authentication & State Pages
+   Sign in, sign up, verification PIN, and error/empty state pages.
+   ===================================================================== */
+.auth-wrap {
+  min-height: calc(100vh - 60px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.auth-side {
+  position: relative;
+  overflow: hidden;
+  color: var(--text);
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.2rem;
+  background: var(--sb-background-dash-sidebar);
+  border-inline-end: 1px solid var(--sb-border);
+}
+
+.auth-side h2 {
+  font-size: clamp(1.4rem, 1rem + 1.4vw, 2rem);
+  color: var(--text);
+}
+
+.auth-side p {
+  color: var(--muted);
+}
+
+.auth-side ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: .7rem;
+}
+
+.auth-side li {
+  display: flex;
+  gap: .6rem;
+  align-items: flex-start;
+  color: var(--muted);
+}
+
+.auth-side li svg {
+  flex: none;
+  margin-block-start: 4px;
+  color: #7ef0e0;
+}
+
+.auth-main {
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+}
+
+.auth-main .card {
+  width: 100%;
+  max-width: 440px;
+  padding: 1.6rem;
+  box-shadow: var(--shadow);
+}
+
+.auth-card {
+  margin-block-start: 0;
+}
+
+.auth-card h1 {
+  margin-block-end: 1.1rem;
+}
+
+.auth-card .hint {
+  display: block;
+}
+
+.container.narrow .auth-card {
+  margin-block-start: 6vh;
+}
+
+.pin-input {
+  font-size: 2rem;
+  letter-spacing: .6em;
+  text-align: center;
+  direction: ltr;
+  padding-inline-start: .6em;
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .auth-wrap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .auth-side {
+    display: none;
+  }
+}
+
+/* State / Error / Empty Pages */
+.state-page {
+  min-height: 55vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.state-page .state-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-block-end: 1rem;
+}
+
+.state-page.bad .state-icon {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.state-page h1 {
+  margin-block-end: .4rem;
+}
+
+.state-page p {
+  color: var(--muted);
+  max-width: 46ch;
+  margin-inline: auto;
+}
+

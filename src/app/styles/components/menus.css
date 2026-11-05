@@ -1,0 +1,486 @@
+/* =====================================================================
+   Menus, Dropdowns, Segmented Tabs & Toggles
+   Studio dropdowns (.menu.dm), classic account popover, switch, and tabs.
+   ===================================================================== */
+
+/* User Account Trigger Button */
+.navuser {
+  position: relative;
+}
+
+.navuser-btn {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .22rem .6rem .22rem .22rem;
+  padding-inline: .22rem .6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  min-height: 48px;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+  text-align: start;
+}
+
+.navuser-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+
+.navuser-btn[aria-expanded="true"] {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.navuser-id {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.navuser-name {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: .9rem;
+}
+
+.navuser-sub {
+  font-size: .72rem;
+  color: var(--muted);
+}
+
+.navuser-chev {
+  color: var(--muted);
+  transition: transform .2s var(--ease);
+}
+
+.navuser-btn[aria-expanded="true"] .navuser-chev {
+  transform: rotate(180deg);
+}
+
+/* Classic Account Popover Menu */
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 48;
+  background: transparent;
+}
+
+.menu {
+  position: absolute;
+  inset-block-start: calc(100% + 10px);
+  inset-inline-end: 0;
+  width: 300px;
+  max-width: calc(100vw - 1.5rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  padding: .35rem;
+  z-index: 50;
+  animation: pop .16s var(--ease) both;
+  transform-origin: top right;
+  overflow: hidden;
+}
+
+[dir="rtl"] .menu {
+  transform-origin: top left;
+}
+
+.menu-grab {
+  display: none;
+}
+
+.menu-head {
+  display: flex;
+  gap: .9rem;
+  align-items: center;
+  padding: 1rem .85rem .9rem;
+  margin: -.35rem -.35rem .35rem;
+  background: var(--sb-muted);
+  border-block-end: 1px solid var(--border);
+}
+
+.menu-name {
+  display: block;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+}
+
+.menu-mail {
+  color: var(--muted);
+  font-size: .8rem;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-block-end: .3rem;
+}
+
+.menu-role {
+  font-size: .7rem;
+  padding: .05rem .5rem;
+}
+
+.menu-label {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: .65rem .75rem .2rem;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  width: 100%;
+  padding: .45rem .55rem;
+  border-radius: 11px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: .93rem;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: start;
+  min-height: 46px;
+  transition: background .12s;
+}
+
+.menu-item .mi {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  color: var(--accent);
+  flex: none;
+  transition: background .12s, color .12s;
+}
+
+.menu-item .mt {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-item .mgo {
+  color: var(--muted);
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity .12s, transform .12s;
+}
+
+[dir="rtl"] .menu-item .mgo {
+  transform: translateX(3px) scaleX(-1);
+}
+
+.menu-item:hover,
+.menu-item:focus-visible {
+  background: var(--accent-soft);
+  color: var(--text);
+  outline: none;
+}
+
+.menu-item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.menu-item:hover .mi,
+.menu-item:focus-visible .mi {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.menu-item:hover .mgo,
+.menu-item:focus-visible .mgo {
+  opacity: 1;
+  transform: none;
+}
+
+[dir="rtl"] .menu-item:hover .mgo,
+[dir="rtl"] .menu-item:focus-visible .mgo {
+  transform: scaleX(-1);
+}
+
+.menu-badge {
+  font-size: .72rem;
+  padding: .05rem .5rem;
+  letter-spacing: .05em;
+}
+
+.menu-item.danger {
+  color: var(--bad);
+}
+
+.menu-item.danger .mi {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.menu-item.danger:hover {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.menu-item.danger:hover .mi {
+  background: var(--bad);
+  color: #fff;
+}
+
+.menu-sep {
+  height: 1px;
+  background: var(--border);
+  margin: .35rem .4rem;
+}
+
+/* Switch Toggle */
+.switch {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--border-strong);
+  flex: none;
+  transition: background .2s;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+  transition: inset-inline-start .2s var(--ease);
+}
+
+.switch.on {
+  background: var(--accent);
+}
+
+.switch.on::after {
+  inset-inline-start: 18px;
+}
+
+/* Supabase Studio Dropdown (shadcn dropdown-menu) */
+.menu.dm {
+  width: 16rem;
+  padding: .25rem;
+  border-radius: var(--sb-radius-md);
+  border: 1px solid var(--sb-border-overlay);
+  background: var(--sb-popover);
+  color: var(--muted);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / .1), 0 2px 4px -2px rgb(0 0 0 / .1);
+  animation: dm-in .12s var(--ease) both;
+}
+
+.dm-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: .25rem .5rem;
+  font-size: .875rem;
+}
+
+.dm-name {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-mail {
+  color: var(--muted);
+  font-size: .75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.dm-role {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  margin-block-start: .25rem;
+  color: var(--lighter);
+  font-size: .75rem;
+}
+
+.dm-sep {
+  height: 1px;
+  margin: .25rem -.25rem;
+  background: var(--sb-border-overlay);
+}
+
+.dm-label {
+  padding: .375rem .5rem;
+  font-size: .75rem;
+  color: var(--lighter);
+}
+
+.dm-item {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  width: 100%;
+  padding: .375rem .5rem;
+  border: 0;
+  border-radius: calc(var(--sb-radius-md) - 2px);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: .8125rem;
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.dm-item svg {
+  color: var(--lighter);
+  flex: none;
+}
+
+.dm-item:hover,
+.dm-item:focus-visible {
+  background: var(--sb-background-overlay-hover);
+  color: var(--text);
+  box-shadow: none;
+  outline: none;
+}
+
+.dm-radio {
+  width: 1rem;
+  display: inline-flex;
+  justify-content: center;
+  flex: none;
+}
+
+.dm-radio.on::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--text);
+}
+
+.dm-radio-item[aria-checked="true"] {
+  color: var(--text);
+}
+
+.navuser .menu.dm {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline-end: 0;
+  z-index: 80;
+}
+
+/* Tabs & Segmented Toggles */
+.tabs {
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+}
+
+.tabs a {
+  padding: .35rem .85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  text-decoration: none;
+  color: var(--text);
+  font-size: .9rem;
+  font-weight: 500;
+  background: var(--surface);
+  transition: background .15s, border-color .15s;
+}
+
+.tabs a:hover {
+  background: var(--surface-2);
+}
+
+.tabs a[aria-current="true"],
+.tabs a[aria-current="page"] {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+
+.chart-views {
+  display: inline-flex;
+  gap: 1rem;
+  border-block-end: 1px solid var(--sb-border);
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.chart-views button {
+  background: none;
+  border: 0;
+  border-block-end: 2px solid transparent;
+  border-radius: 0;
+  padding: .375rem 0;
+  font: inherit;
+  font-size: .875rem;
+  color: var(--lighter);
+  cursor: pointer;
+  margin-block-end: -1px;
+  box-shadow: none;
+}
+
+.chart-views button:hover {
+  color: var(--text);
+}
+
+.chart-views button[aria-pressed="true"] {
+  color: var(--text);
+  border-block-end-color: var(--text);
+  background: none;
+}
+
+.pill {
+  border: 1px solid var(--sb-input);
+  background: var(--sb-field);
+  border-radius: var(--sb-radius-md);
+  font-size: .8125rem;
+  padding: .3rem .6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin: .15rem;
+  cursor: pointer;
+}
+
+.pill:hover {
+  border-color: var(--sb-border-control-hover);
+}
+
+.pill:has(input:checked),
+.pill.on {
+  background: var(--sb-accent);
+  border-color: var(--sb-foreground);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.pill input {
+  accent-color: var(--accent);
+}
+

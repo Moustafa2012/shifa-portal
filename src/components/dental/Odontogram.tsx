@@ -1,4 +1,5 @@
 "use client";
+import { DirectionProvider } from "@/components/ui/direction";
 
 import { useRef } from "react";
 import type { Lang } from "@/lib/i18n";
@@ -107,6 +108,7 @@ export function Odontogram({
   };
 
   return (
+    <DirectionProvider direction="ltr">
     <div className="odonto" dir="ltr">
       <div className="odonto-sides" aria-hidden="true">
         <span>{ar ? "يمين المريض" : "Patient's right"}</span>
@@ -180,6 +182,7 @@ export function Odontogram({
         </svg>
       </div>
     </div>
+    </DirectionProvider>
   );
 }
 

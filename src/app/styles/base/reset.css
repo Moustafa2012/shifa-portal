@@ -1,0 +1,39 @@
+/* =====================================================================
+   Base CSS Reset & Defaults
+   ===================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--sb-accent);
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+  border-radius: 6px;
+}
+
+.btn, button, summary, .tabs a {
+  touch-action: manipulation;
+}
+

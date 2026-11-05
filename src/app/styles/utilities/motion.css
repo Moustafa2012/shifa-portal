@@ -1,0 +1,87 @@
+/* =====================================================================
+   Motion & Animation System
+   Keyframes and reduced-motion user preference overrides.
+   ===================================================================== */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideup {
+  from {
+    transform: translateY(40px);
+    opacity: .6;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes dm-in {
+  from {
+    opacity: 0;
+    transform: scale(.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

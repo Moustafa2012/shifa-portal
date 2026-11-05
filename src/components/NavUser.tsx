@@ -1,5 +1,6 @@
-/* eslint-disable @next/next/no-img-element -- avatars are small private images served by /api/avatar */
 "use client";
+import { Avatar } from "@/components/Avatar";
+/* eslint-disable @next/next/no-img-element -- avatars are small private images served by /api/avatar */
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -49,7 +50,7 @@ export function NavUser({ name, email, admin, text, avatar }: { name: string; em
 
   // Studio's UserDropdown: a round 32px avatar; the menu: name and e-mail, the account links, theme and language as
   // radio groups, sign out. Items are 12px text with 14px icons in the lighter foreground, like Supabase's dropdown-menu.
-  const face = (cls: string) => <span className={`avatar ${cls}`} aria-hidden="true">{avatar ? <img src={avatar} alt="" className="avatar-img" /> : initials(name || email)}</span>;
+  const face = (cls: string) => <Avatar name={name || email} src={avatar} size={cls === "sm" ? "sm" : cls === "lg" ? "lg" : "md"} />;
   const radio = (on: boolean) => <span className={`dm-radio${on ? " on" : ""}`} aria-hidden="true" />;
   return (
     <div className="navuser" ref={root} onKeyDown={onKey}>

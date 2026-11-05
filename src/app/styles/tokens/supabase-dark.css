@@ -1,0 +1,95 @@
+/* =====================================================================
+   Supabase design tokens — dark theme palette
+   Ported verbatim from supabase/supabase (themes/dark.css).
+   Applies via system preference or explicit data-theme="dark".
+   ===================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sb-border: rgba(255, 255, 255, 0.08);
+    --sb-border-default: rgba(255, 255, 255, 0.08);
+    --sb-border-muted: rgba(255, 255, 255, 0.05);
+    --sb-input: rgba(255, 255, 255, 0.12);
+    --sb-border-control: rgba(255, 255, 255, 0.12);
+    --sb-helpers-os-appearance: Dark;
+    --sb-hue: 157.5;
+    --sb-chroma: 0.005;
+    --sb-surface: 0.19;
+    --sb-elevation-step: 0.025;
+    --sb-contrast: 0.5;
+    --sb-foreground-lightness: 0.95;
+    --sb-muted-foreground-level: 0.8;
+    --sb-tertiary-foreground-level: 0.65;
+    --sb-field-alpha: 0.12;
+    --sb-code-block-5: 13.8deg 89.7% 69.6%;
+    --sb-code-block-4: 276.1deg 67.7% 74.5%;
+    --sb-code-block-3: 83.8deg 61.7% 63.1%;
+    --sb-code-block-2: 33.2deg 90.3% 75.7%;
+    --sb-code-block-1: 170.8deg 43.1% 61.4%;
+    --sb-secondary-default: 247.8deg 100% 70%;
+    --sb-secondary-400: 248.3deg 54.5% 25.9%;
+    --sb-secondary-200: 248deg 53.6% 11%;
+    --sb-brand-default: 153.1deg 60.2% 52.7%;
+    --sb-brand-600: 154.9deg 59.5% 70%;
+    --sb-brand-500: 154.9deg 100% 19.2%;
+    --sb-brand-400: 155.5deg 100% 9.6%;
+    --sb-brand-300: 155.1deg 100% 8%;
+    --sb-brand-200: 162deg 100% 2%;
+    --sb-warning-default: 38.9deg 100% 42.9%;
+    --sb-warning-600: 38.9deg 100% 42.9%;
+    --sb-warning-500: 34.8deg 90.9% 21.6%;
+    --sb-warning-400: 33.2deg 100% 14.5%;
+    --sb-warning-300: 32.3deg 100% 10.2%;
+    --sb-warning-200: 36.6deg 100% 8%;
+    --sb-destructive-default: 10.2deg 77.9% 53.9%;
+    --sb-destructive-600: 9.7deg 85.2% 62.9%;
+    --sb-destructive-500: 7.9deg 71.6% 29%;
+    --sb-destructive-400: 6.7deg 60% 20.6%;
+    --sb-destructive-300: 7.5deg 51.3% 15.3%;
+    --sb-destructive-200: 10.9deg 23.4% 9.2%;
+  }
+}
+
+:root[data-theme="dark"] {
+  --sb-border: rgba(255, 255, 255, 0.08);
+  --sb-border-default: rgba(255, 255, 255, 0.08);
+  --sb-border-muted: rgba(255, 255, 255, 0.05);
+  --sb-input: rgba(255, 255, 255, 0.12);
+  --sb-border-control: rgba(255, 255, 255, 0.12);
+  --sb-helpers-os-appearance: Dark;
+  --sb-hue: 157.5;
+  --sb-chroma: 0.005;
+  --sb-surface: 0.19;
+  --sb-elevation-step: 0.025;
+  --sb-contrast: 0.5;
+  --sb-foreground-lightness: 0.95;
+  --sb-muted-foreground-level: 0.8;
+  --sb-tertiary-foreground-level: 0.65;
+  --sb-field-alpha: 0.12;
+  --sb-code-block-5: 13.8deg 89.7% 69.6%;
+  --sb-code-block-4: 276.1deg 67.7% 74.5%;
+  --sb-code-block-3: 83.8deg 61.7% 63.1%;
+  --sb-code-block-2: 33.2deg 90.3% 75.7%;
+  --sb-code-block-1: 170.8deg 43.1% 61.4%;
+  --sb-secondary-default: 247.8deg 100% 70%;
+  --sb-secondary-400: 248.3deg 54.5% 25.9%;
+  --sb-secondary-200: 248deg 53.6% 11%;
+  --sb-brand-default: 153.1deg 60.2% 52.7%;
+  --sb-brand-600: 154.9deg 59.5% 70%;
+  --sb-brand-500: 154.9deg 100% 19.2%;
+  --sb-brand-400: 155.5deg 100% 9.6%;
+  --sb-brand-300: 155.1deg 100% 8%;
+  --sb-brand-200: 162deg 100% 2%;
+  --sb-warning-default: 38.9deg 100% 42.9%;
+  --sb-warning-600: 38.9deg 100% 42.9%;
+  --sb-warning-500: 34.8deg 90.9% 21.6%;
+  --sb-warning-400: 33.2deg 100% 14.5%;
+  --sb-warning-300: 32.3deg 100% 10.2%;
+  --sb-warning-200: 36.6deg 100% 8%;
+  --sb-destructive-default: 10.2deg 77.9% 53.9%;
+  --sb-destructive-600: 9.7deg 85.2% 62.9%;
+  --sb-destructive-500: 7.9deg 71.6% 29%;
+  --sb-destructive-400: 6.7deg 60% 20.6%;
+  --sb-destructive-300: 7.5deg 51.3% 15.3%;
+  --sb-destructive-200: 10.9deg 23.4% 9.2%;
+}
+

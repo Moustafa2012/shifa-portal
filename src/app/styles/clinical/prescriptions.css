@@ -1,0 +1,96 @@
+/* =====================================================================
+   Prescriptions, Consents & Safety Alerts
+   Medication orders, informed consent forms, and allergy/contraindication warnings.
+   ===================================================================== */
+.rx-form .rx-line {
+  border: 1px solid var(--line, var(--sb-border-default));
+  border-radius: 10px;
+  padding: .6rem .8rem .8rem;
+  margin: 0;
+}
+
+.rx-form .rx-line legend {
+  padding-inline: .4rem;
+  font-weight: 600;
+  font-size: .9rem;
+}
+
+.rx-fixed {
+  margin: 0;
+  padding-block: .5rem;
+  font-weight: 600;
+}
+
+.rx-card.closed,
+.consent-card.closed {
+  opacity: .82;
+}
+
+.rx-lines {
+  list-style: none;
+  margin: .4rem 0;
+  padding: 0;
+  display: grid;
+  gap: .35rem;
+}
+
+.rx-lines li {
+  padding-inline-start: .6rem;
+  border-inline-start: 3px solid var(--sb-border-default, #ddd);
+  overflow-wrap: anywhere;
+}
+
+.consent-form textarea {
+  min-block-size: 9rem;
+}
+
+.consent-withdrawn {
+  color: var(--sb-destructive-default, #ca3214);
+  margin: .2rem 0;
+}
+
+.consent-card p {
+  overflow-wrap: anywhere;
+}
+
+.plan-consents {
+  margin: .3rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  align-items: center;
+}
+
+.plan-consents .chip {
+  white-space: normal;
+  max-inline-size: 100%;
+}
+
+.safety .safety-list,
+.safety-list {
+  display: grid;
+  gap: .5rem;
+}
+
+.safety-list.compact {
+  margin-block: .35rem;
+}
+
+.safety-alert {
+  align-items: flex-start;
+}
+
+.consent-form select,
+.consent-form input:not([type="checkbox"]),
+.consent-form textarea,
+.rx-form select,
+.rx-form input:not([type="checkbox"]) {
+  max-inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.consent-form .field,
+.rx-form .field {
+  min-inline-size: 0;
+}
+

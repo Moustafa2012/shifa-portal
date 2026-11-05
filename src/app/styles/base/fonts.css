@@ -1,0 +1,9 @@
+/* =====================================================================
+   Web Fonts & Fallbacks
+   Alyamama (Arabic primary) & Source Code Pro (Monospace)
+   Font imports are handled at stylesheet root (index.css).
+   ===================================================================== */
+:root {
+  --font: "Alyamama", "Segoe UI", Tahoma, system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, monospace;
+}

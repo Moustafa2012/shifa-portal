@@ -1,0 +1,189 @@
+/* =====================================================================
+   Button Component
+   Variants: primary, secondary, outline, dashed, link, ghost/text, danger, warning
+   Sizes: xs/tiny, sm, md (default 38px), lg, xl
+   ===================================================================== */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  cursor: pointer;
+  text-align: center;
+  font: inherit;
+  font-weight: 500;
+  font-size: .875rem;
+  line-height: 1.25rem;
+  text-decoration: none;
+  white-space: nowrap;
+  height: 38px;
+  min-height: 38px;
+  padding: .5rem 1rem;
+  border-radius: calc(var(--sb-radius-md) * (1 + (38 / 26 - 1) * 0.35));
+  border: 0;
+  color: var(--text);
+  background: var(--sb-card);
+  box-shadow: var(--sb-button-shadow-default);
+  transition: background-color .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease), scale .2s var(--ease);
+}
+
+.btn:hover {
+  background: var(--sb-secondary);
+  color: var(--text);
+}
+
+.btn:not([aria-haspopup]):active {
+  scale: .97;
+  transform: none;
+}
+
+.btn:focus-visible {
+  box-shadow: var(--focus);
+}
+
+/* Button Variants */
+.btn.primary {
+  background-color: var(--sb-primary-solid);
+  background-image: linear-gradient(to bottom, hsl(var(--sb-colors-white) / .015), hsl(var(--sb-colors-black) / .01));
+  color: var(--sb-primary-solid-foreground);
+  box-shadow: var(--sb-button-shadow-raised);
+}
+
+.btn.primary:hover {
+  background-color: var(--sb-primary-solid-hover);
+  color: var(--sb-primary-solid-foreground);
+}
+
+.btn.secondary {
+  background: var(--sb-foreground);
+  color: var(--sb-background);
+  box-shadow: var(--sb-button-shadow-drop);
+}
+
+.btn.secondary:hover {
+  background: oklch(from var(--sb-foreground) l c h / .9);
+  color: var(--sb-background);
+}
+
+.btn.outline {
+  background: transparent;
+  box-shadow: none;
+  border: 1px solid var(--sb-input);
+}
+
+.btn.outline:hover {
+  background: transparent;
+  border-color: var(--sb-tertiary-foreground);
+}
+
+.btn.dashed {
+  background: transparent;
+  box-shadow: none;
+  border: 1px dashed var(--sb-input);
+}
+
+.btn.dashed:hover {
+  border-color: var(--sb-border-control-hover);
+  background: transparent;
+}
+
+.btn.link {
+  background: transparent;
+  box-shadow: none;
+  color: var(--sb-primary);
+}
+
+.btn.link:hover {
+  background: oklch(from var(--sb-primary-bright) l c h / 15%);
+  color: var(--sb-primary);
+}
+
+.btn.ghost,
+.btn.text {
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  border-color: transparent;
+}
+
+.btn.ghost:hover,
+.btn.text:hover {
+  background: var(--sb-accent);
+}
+
+.btn.danger {
+  background-color: var(--sb-destructive);
+  background-image: linear-gradient(to bottom, hsl(var(--sb-colors-white) / .015), hsl(var(--sb-colors-black) / .01));
+  color: var(--sb-destructive-foreground);
+  box-shadow: var(--sb-button-shadow-raised);
+  border: 0;
+}
+
+.btn.danger:hover {
+  background-color: var(--sb-destructive-hover);
+  color: var(--sb-destructive-foreground);
+}
+
+.btn.warning {
+  background-color: var(--sb-warning);
+  color: var(--sb-warning-foreground);
+  box-shadow: var(--sb-button-shadow-raised);
+}
+
+.btn.warning:hover {
+  background-color: var(--sb-warning-hover);
+}
+
+/* Button Sizes */
+.btn.xs,
+.btn.tiny {
+  height: 26px;
+  min-height: 26px;
+  padding: .25rem .625rem;
+  font-size: .75rem;
+  border-radius: var(--sb-radius-md);
+}
+
+.btn.sm {
+  height: 34px;
+  min-height: 34px;
+  padding: .5rem .75rem;
+  font-size: .875rem;
+  line-height: 1rem;
+  border-radius: calc(var(--sb-radius-md) * (1 + (34 / 26 - 1) * 0.35));
+}
+
+.btn.lg {
+  height: 42px;
+  min-height: 42px;
+  padding: .5rem 1rem;
+  font-size: 1rem;
+  border-radius: calc(var(--sb-radius-md) * (1 + (42 / 26 - 1) * 0.35));
+}
+
+.btn.xl {
+  height: 50px;
+  min-height: 50px;
+  padding: .75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: calc(var(--sb-radius-md) * (1 + (50 / 26 - 1) * 0.35));
+}
+
+/* States */
+.btn[disabled],
+.btn[aria-disabled="true"] {
+  opacity: .5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn[aria-busy="true"] {
+  pointer-events: none;
+  opacity: .85;
+}
+
+.btn svg {
+  flex: none;
+}
+

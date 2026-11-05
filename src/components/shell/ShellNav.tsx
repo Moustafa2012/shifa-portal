@@ -10,6 +10,7 @@ import {
   LayoutGrid, Stethoscope as Visit, Image as ImageIcon, ListChecks, Wrench, Trash2, BellRing, PanelLeft, Ruler, Search, Thermometer, Siren, UserPlus, type LucideIcon,
 } from "lucide-react";
 import { SpecialtyIcon } from "@/components/Icon";
+import { useDirection } from "@/components/ui/direction";
 import { activeProduct, groupVisible, itemActive, type ShellItem, type ShellNav as Nav, type ShellProduct } from "./nav";
 
 const ICONS: Record<string, LucideIcon> = {
@@ -46,6 +47,7 @@ const isBehaviour = (v: unknown): v is Behaviour => v === "hover" || v === "open
  */
 export function ShellRail({ nav, label, behaviourLabels, initialMode = "hover" }: { nav: Nav; label: string; behaviourLabels?: { title: string; open: string; closed: string; hover: string }; initialMode?: Behaviour }) {
   const { active } = useNav(nav);
+  const direction = useDirection();
   const [mode, setMode] = useState<Behaviour>(initialMode);
   const [menu, setMenu] = useState(false);
   const [place, setPlace] = useState<{ bottom: number; start: number } | null>(null);
@@ -67,14 +69,14 @@ export function ShellRail({ nav, label, behaviourLabels, initialMode = "hover" }
   useEffect(() => {
     if (!menu) return;
     const r = trigger.current?.getBoundingClientRect();
-    if (r) setPlace({ bottom: window.innerHeight - r.top + 4, start: document.dir === "rtl" ? window.innerWidth - r.right : r.left });
+    if (r) setPlace({ bottom: window.innerHeight - r.top + 4, start: direction === "rtl" ? window.innerWidth - r.right : r.left });
     const onDown = (e: MouseEvent | TouchEvent) => {
       const n = e.target as Node;
       if (!pop.current?.contains(n) && !trigger.current?.contains(n)) setMenu(false);
     };
     document.addEventListener("mousedown", onDown); document.addEventListener("touchstart", onDown);
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("touchstart", onDown); };
-  }, [menu]);
+  }, [menu, direction]);
   useEffect(() => { if (menu && place) (pop.current?.querySelector<HTMLElement>('[aria-checked="true"]') ?? pop.current?.querySelector<HTMLElement>('[role="menuitemradio"]'))?.focus(); }, [menu, place]);
   const onMenuKey = (e: React.KeyboardEvent) => {
     if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setMenu(false); trigger.current?.focus(); return; }

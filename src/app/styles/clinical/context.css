@@ -1,0 +1,114 @@
+/* =====================================================================
+   Clinical Context (Core File Header)
+   Top banner shown across all patient views providing essential context.
+   ===================================================================== */
+.patient-head {
+  background: var(--sb-card);
+}
+
+.patient-head .avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+
+.ctx h3 {
+  font-size: .92rem;
+  margin: 0 0 .35rem;
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+
+.ctx-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  align-items: center;
+  margin-block-end: .9rem;
+}
+
+.ctx-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 1.4rem;
+}
+
+.ctx-grid > div {
+  min-width: 0;
+}
+
+.ctx-grid p {
+  margin: 0 0 .2rem;
+}
+
+.ctx-alerts {
+  display: grid;
+  gap: .45rem;
+  margin-block-end: .9rem;
+}
+
+.ctx-alerts .banner {
+  align-items: flex-start;
+}
+
+.ctx-edit {
+  color: var(--muted);
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.ctx-edit:hover {
+  color: var(--accent);
+  background: var(--surface-2);
+}
+
+.ctx-gaps {
+  margin: .9rem 0 0;
+  padding-block-start: .6rem;
+  border-block-start: 1px dashed var(--border);
+}
+
+.warn-text {
+  color: var(--warn);
+}
+
+.ok-text {
+  color: var(--ok);
+}
+
+.core-status p {
+  margin: 0 0 .6rem;
+}
+
+.core-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
+.core-toc a {
+  text-decoration: none;
+}
+
+.none-form {
+  gap: .6rem;
+  align-items: center;
+  padding: .6rem .8rem;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 900px) {
+  .ctx-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .ctx-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -1,0 +1,238 @@
+/* =====================================================================
+   Dental Imaging & Viewer
+   Full-screen radiographic image viewer dialog, pan/zoom viewport, and bone levels.
+   ===================================================================== */
+.whole-mouth {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .55rem .8rem;
+  margin-block: var(--space-3);
+  background: color-mix(in srgb, var(--surface-2) 40%, transparent);
+}
+
+.whole-mouth h4 {
+  margin: 0 0 .25rem;
+  font-size: .92rem;
+}
+
+.finding-image {
+  white-space: nowrap;
+}
+
+fieldset.bone-levels {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .5rem .75rem .75rem;
+  margin: 0;
+}
+
+fieldset.bone-levels legend {
+  font-weight: 600;
+  font-size: .9rem;
+  padding-inline: .25rem;
+}
+
+.bone-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.2fr) 1.4fr 1fr;
+  gap: .4rem;
+  align-items: center;
+  margin-block-start: .35rem;
+}
+
+@media (max-width: 640px) {
+  .bone-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bone-row .bone-name {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Image Viewer Dialog */
+.iv-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(0 0 0 / .72);
+  display: grid;
+  place-items: center;
+  padding: .5rem;
+}
+
+.iv-dialog {
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: min(1280px, 100%);
+  max-height: calc(100vh - 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding: .6rem .75rem;
+  overflow: auto;
+  outline: none;
+  box-shadow: var(--shadow-lg, 0 10px 40px rgb(0 0 0 / .4));
+}
+
+.iv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+}
+
+.iv-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iv-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+}
+
+.iv-draw {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .25rem;
+}
+
+.iv-btn {
+  min-width: 34px;
+  padding-inline: .45rem;
+}
+
+.iv-pick select {
+  max-width: 280px;
+}
+
+.iv-panes {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .5rem;
+}
+
+.iv-panes.two {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 760px) {
+  .iv-panes.two {
+    grid-template-columns: 1fr;
+  }
+}
+
+.iv-pane {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  min-width: 0;
+}
+
+.iv-pane-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .2rem .4rem;
+}
+
+.iv-zoom {
+  min-width: 3.2rem;
+  text-align: center;
+}
+
+.iv-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .78rem;
+  color: var(--muted);
+}
+
+.iv-slider input {
+  width: 96px;
+}
+
+.iv-viewport {
+  position: relative;
+  height: min(62vh, 640px);
+  overflow: hidden;
+  background: #0b0b0c;
+  border-radius: var(--radius-sm);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.iv-viewport.tool-pan:active {
+  cursor: grabbing;
+}
+
+.iv-viewport:not(.tool-pan) {
+  cursor: crosshair;
+}
+
+.iv-viewport:focus-visible {
+  outline: 2px solid var(--sb-ring);
+  outline-offset: 2px;
+}
+
+.iv-stage {
+  position: absolute;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.iv-stage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.iv-overlay-svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.iv-text-input {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-4px, -50%);
+  min-width: 160px;
+  height: 28px;
+  padding: 0 .4rem;
+}
+
+.iv-fail {
+  color: #fff;
+  padding: 1rem;
+  margin: 0;
+}
+
+.iv-save {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.iv-list ul {
+  list-style: none;
+  padding: 0;
+  margin: .4rem 0 0;
+  display: grid;
+  gap: .35rem;
+}
+
+.iv-list li input {
+  height: 28px;
+}
+

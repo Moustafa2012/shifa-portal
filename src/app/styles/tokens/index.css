@@ -1,0 +1,7 @@
+/* =====================================================================
+   Design Tokens Aggregator
+   Includes Supabase token primitives, Shifa mapped tokens, and shadcn tokens.
+   ===================================================================== */
+@import "./supabase.css";
+@import "./shifa.css";
+@import "./shadcn.css";

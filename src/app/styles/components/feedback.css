@@ -1,0 +1,214 @@
+/* =====================================================================
+   Feedback Components
+   Admonitions (Banners) and Badges (Chips).
+   ===================================================================== */
+
+/* Admonitions (Banners) */
+.banner {
+  position: relative;
+  display: flex;
+  gap: .75rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--sb-border);
+  background: var(--sb-card);
+  color: var(--text);
+  font-size: .875rem;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+.banner > svg:first-child {
+  flex: none;
+  width: 23px;
+  height: 23px;
+  padding: 4px;
+  border-radius: 4px;
+  margin: 0 !important;
+  background: var(--sb-tertiary-foreground);
+  color: var(--sb-background);
+}
+
+.banner > div {
+  min-width: 0;
+  flex: 1;
+  color: var(--muted);
+}
+
+.banner strong,
+.banner .adm-title {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.banner .adm-title {
+  display: block;
+  margin: 0 0 .125rem;
+}
+
+.banner.warn {
+  background: hsl(var(--sb-warning-200));
+  border-color: hsl(var(--sb-warning-400));
+}
+
+.banner.warn > svg:first-child {
+  background: hsl(var(--sb-warning-600));
+  color: hsl(var(--sb-warning-200));
+}
+
+.banner.bad {
+  background: hsl(var(--sb-destructive-200));
+  border-color: hsl(var(--sb-destructive-400));
+}
+
+.banner.bad > svg:first-child {
+  background: hsl(var(--sb-destructive-600));
+  color: hsl(var(--sb-destructive-200));
+}
+
+.banner.ok {
+  background: hsl(var(--sb-brand-400) / .15);
+  border-color: hsl(var(--sb-brand-400));
+}
+
+.banner.ok > svg:first-child {
+  background: hsl(var(--sb-brand-default));
+  color: #fff;
+}
+
+:root[data-theme="dark"] .banner.ok {
+  background: hsl(var(--sb-brand-default) / .1);
+  border-color: hsl(var(--sb-brand-500));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .banner.ok {
+    background: hsl(var(--sb-brand-default) / .1);
+    border-color: hsl(var(--sb-brand-500));
+  }
+}
+
+.banner.info {
+  background: var(--sb-card);
+  border-color: var(--sb-border);
+  color: var(--text);
+}
+
+.banner ul {
+  margin: .375rem 0 0;
+  padding-inline-start: 1rem;
+  list-style: none;
+}
+
+.banner ul > li {
+  position: relative;
+  margin: .125rem 0;
+}
+
+.banner ul > li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -1rem;
+  top: .65rem;
+  width: .5rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--sb-input);
+}
+
+/* Badges (Chips) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid var(--sb-input);
+  background: var(--sb-card);
+  color: var(--muted);
+  font-weight: 500;
+  font-size: .75rem;
+  line-height: 1;
+  padding: .25rem .5rem;
+}
+
+:lang(en) .chip {
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  font-size: .7rem;
+  padding: .2rem .45rem;
+}
+
+.chip svg {
+  width: 12px;
+  height: 12px;
+}
+
+.chip.ok {
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.chip.warn {
+  background: rgba(245, 158, 11, 0.12);
+  color: #78350f;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.chip.bad {
+  background: rgba(244, 63, 94, 0.12);
+  color: #881337;
+  border-color: rgba(244, 63, 94, 0.25);
+}
+
+.chip.info {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0c4a6e;
+  border-color: rgba(14, 165, 233, 0.25);
+}
+
+.chip.muted {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--muted);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* High-contrast dark mode chips */
+[data-theme="dark"] .chip.ok,
+.dark .chip.ok {
+  background: rgba(16, 185, 129, 0.18);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+[data-theme="dark"] .chip.warn,
+.dark .chip.warn {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+[data-theme="dark"] .chip.bad,
+.dark .chip.bad {
+  background: rgba(244, 63, 94, 0.18);
+  color: #fda4af;
+  border-color: rgba(244, 63, 94, 0.35);
+}
+
+[data-theme="dark"] .chip.info,
+.dark .chip.info {
+  background: rgba(14, 165, 233, 0.18);
+  color: #7dd3fc;
+  border-color: rgba(14, 165, 233, 0.35);
+}
+
+[data-theme="dark"] .chip.muted,
+.dark .chip.muted {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+

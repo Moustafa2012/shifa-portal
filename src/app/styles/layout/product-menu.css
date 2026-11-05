@@ -1,0 +1,112 @@
+/* =====================================================================
+   Product Menu Bar
+   Sub-navigation menu bar (Studio ProductMenuBar)
+   ===================================================================== */
+.product-menu {
+  flex: none;
+  width: 15rem;
+  position: sticky;
+  top: 3rem;
+  align-self: flex-start;
+  height: calc(100vh - 3rem);
+  height: calc(100dvh - 3rem);
+  overflow: auto;
+  scrollbar-width: thin;
+  padding: 0;
+  background: var(--sb-background-dash-sidebar);
+  border-inline-end: 1px solid var(--sb-border);
+}
+
+.pm-head {
+  display: flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0 1.5rem;
+  border-block-end: 1px solid var(--sb-border);
+}
+
+.pm-title {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: .875rem;
+  font-weight: 400;
+  color: var(--text);
+}
+
+.pm-body {
+  padding: 0;
+}
+
+.pm-group {
+  margin: 1rem .75rem;
+}
+
+.pm-group + .pm-group {
+  margin-block-start: 0;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--sb-border);
+}
+
+.pm-group-label {
+  padding: 0 .75rem .5rem;
+  font-size: .75rem;
+  color: var(--lighter);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+:lang(en) .pm-group-label {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+
+.product-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+
+.product-menu a {
+  display: flex;
+  align-items: center;
+  margin: 1px 0;
+  padding: 3px .75rem;
+  min-height: 1.75rem;
+  gap: .5rem;
+  border-radius: var(--sb-radius-md);
+  font-size: .875rem;
+  color: var(--muted);
+  text-decoration: none;
+  transition: background .15s, color .15s;
+}
+
+.product-menu a svg {
+  display: none;
+}
+
+.product-menu a:hover {
+  color: var(--text);
+  background: oklch(from var(--sb-accent) l c h / calc(alpha * .5));
+}
+
+.product-menu a[aria-current="page"] {
+  color: var(--text);
+  font-weight: 600;
+  background: var(--sb-accent);
+}
+
+.pm-badge {
+  margin-inline-start: auto;
+  font-size: .6875rem;
+  font-weight: 500;
+  padding: 0 .375rem;
+  border-radius: 999px;
+  background: hsl(var(--sb-warning-200));
+  color: hsl(var(--sb-warning-600));
+  border: 1px solid hsl(var(--sb-warning-500));
+}
+

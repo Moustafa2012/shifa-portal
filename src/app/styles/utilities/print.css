@@ -1,0 +1,84 @@
+/* =====================================================================
+   Print Stylesheet
+   Rules applied when generating PDFs or sending medical records to print.
+   ===================================================================== */
+.noprint-hide { }
+
+.print-only {
+  display: none;
+}
+
+body.no-print-share .print-only {
+  display: block;
+}
+
+@media print {
+  /* Hide non-printable interface chrome */
+  .topbar,
+  .sidenav,
+  .bottomnav,
+  .sheet-wrap,
+  .topprogress,
+  .no-print,
+  .btn,
+  .site-footer,
+  .skip-link,
+  .rail,
+  .product-menu,
+  .shell-top,
+  .shell-subnav,
+  .drawer-wrap {
+    display: none !important;
+  }
+
+  /* Reset layout structure for clean page flow */
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .shell,
+  .shell-below,
+  .shell-col,
+  .shell-body {
+    display: block;
+  }
+
+  .card,
+  .rec,
+  .emergency-card {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .container,
+  .shell-page {
+    padding: 0;
+    max-width: none;
+    animation: none;
+  }
+
+  /* Specialty clinical print overrides */
+  .perio-wrap {
+    overflow: visible;
+  }
+
+  table.perio-chart {
+    min-width: 0;
+    font-size: .6rem;
+  }
+
+  .no-print-keep {
+    display: block !important;
+  }
+
+  /* Shared documents viewer print mode */
+  body.no-print-share > * {
+    display: none !important;
+  }
+
+  body.no-print-share .print-only {
+    display: block !important;
+  }
+}
+

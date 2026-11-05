@@ -1,0 +1,15 @@
+/* =====================================================================
+   Tailwind CSS Directives
+   Enables utility classes for shadcn/ui and custom components.
+   ===================================================================== */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, ::before, ::after {
+    border-color: var(--border);
+  }
+}
+
+

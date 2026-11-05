@@ -1,0 +1,223 @@
+/* =====================================================================
+   Supabase design tokens — core OKLCH mathematical system
+   Ported verbatim from supabase/supabase (semantic.css, compat.css).
+   ===================================================================== */
+:root {
+  --sb-colors-black: 0deg 0% 0%;
+  --sb-colors-white: 0deg 0% 100%;
+  --sb-radius-md: 6px;
+  --sb-hue: 157.5;
+  --sb-primary-hue: var(--sb-hue);
+  --sb-surface-hue-offset: 0;
+  --sb-surface-hue: calc(var(--sb-primary-hue) + var(--sb-surface-hue-offset));
+  --sb-chroma: 0.016;
+  --sb-surface: 0.17;
+  --sb-foreground-lightness: 0.95;
+  --sb-muted-foreground-level: 0.8;
+  --sb-tertiary-foreground-level: 0.65;
+  --sb-contrast: 0.5;
+  --sb-contrast-delta: calc((var(--sb-contrast) - 0.5) / 0.5);
+  --sb-contrast-up: max(0, var(--sb-contrast-delta));
+  --sb-contrast-down: max(0, calc(var(--sb-contrast-delta) * -1));
+  --sb-contrast-text-floor: 0.9;
+  --sb-contrast-border-floor: 0.05;
+  --sb-contrast-text: calc(1 - (1 - var(--sb-contrast-text-floor)) * var(--sb-contrast-down));
+  --sb-contrast-border-linear: calc(
+    var(--sb-contrast-border-floor) + (1 - var(--sb-contrast-border-floor)) * var(--sb-contrast)
+  );
+  --sb-contrast-border: calc(var(--sb-contrast-border-linear) * var(--sb-contrast-border-linear));
+  --sb-elevation-1: 1;
+  --sb-elevation-2: 1.5;
+  --sb-elevation-3: 2;
+  --sb-elevation-4: 3;
+  --sb-tone-span: calc(var(--sb-foreground-lightness) - var(--sb-surface));
+  --sb-elevation-step: calc(var(--sb-tone-span) * 0.04);
+  --sb-surface-overlay-unit: calc(
+    var(--sb-elevation-step) / max(var(--sb-tone-span), calc(var(--sb-tone-span) * -1))
+  );
+  --sb-muted-alpha: calc(var(--sb-surface-overlay-unit) * var(--sb-elevation-1));
+  --sb-accent-alpha: calc(var(--sb-surface-overlay-unit) * var(--sb-elevation-2));
+  --sb-tertiary-alpha: calc(var(--sb-surface-overlay-unit) * var(--sb-elevation-3));
+  --sb-brand-hue-reference: 157.5;
+  --sb-status-hue-pull: 0.15;
+  --sb-warning-hue: clamp(
+    65,
+    calc(75 + (var(--sb-primary-hue) - var(--sb-brand-hue-reference)) * var(--sb-status-hue-pull)),
+    95
+  );
+  --sb-destructive-hue: clamp(
+    12,
+    calc(25 + (var(--sb-primary-hue) - var(--sb-brand-hue-reference)) * var(--sb-status-hue-pull)),
+    42
+  );
+  --sb-info-hue: clamp(
+    272,
+    calc(288 + (var(--sb-primary-hue) - var(--sb-brand-hue-reference)) * var(--sb-status-hue-pull)),
+    302
+  );
+  --sb-expressive-chroma: 0.14;
+  --sb-warning-lightness: 0.8;
+  --sb-destructive-lightness: 0.55;
+  --sb-info-lightness: 0.7;
+  --sb-background: oklch(var(--sb-surface) calc(var(--sb-chroma) * 0.5) var(--sb-surface-hue));
+  --sb-foreground-chroma: calc(var(--sb-chroma) * 0.55);
+  --sb-foreground: oklch(
+    calc(var(--sb-surface) + var(--sb-tone-span) * var(--sb-contrast-text)) var(--sb-foreground-chroma)
+      var(--sb-surface-hue)
+  );
+  --sb-foreground-contrast: oklch(var(--sb-surface) calc(var(--sb-chroma) * 0.55) var(--sb-surface-hue));
+  --sb-card: oklch(from var(--sb-background) calc(l + var(--sb-elevation-step) * var(--sb-elevation-1)) c h);
+  --sb-card-foreground: var(--sb-foreground);
+  --sb-popover: oklch(from var(--sb-background) calc(l + var(--sb-elevation-step) * var(--sb-elevation-2)) c h);
+  --sb-popover-foreground: var(--sb-foreground);
+  --sb-primary: oklch(0.76 0.15 var(--sb-primary-hue));
+  --sb-primary-bright: oklch(from var(--sb-primary) max(l, 0.7) max(c, 0.15) h);
+  --sb-button-fill-hover-delta: 0.04;
+  --sb-primary-hover: oklch(
+    from var(--sb-primary)
+      calc(
+        l + var(--sb-button-fill-hover-delta) * var(--sb-tone-span) /
+          max(var(--sb-tone-span), calc(var(--sb-tone-span) * -1))
+      )
+      c h
+  );
+  --sb-primary-bright-hover: oklch(
+    from var(--sb-primary-bright)
+      calc(
+        l + var(--sb-button-fill-hover-delta) * var(--sb-tone-span) /
+          max(var(--sb-tone-span), calc(var(--sb-tone-span) * -1))
+      )
+      c h
+  );
+  --sb-primary-foreground: oklch(
+    min(var(--sb-surface), var(--sb-foreground-lightness)) calc(var(--sb-chroma) * 0.45) var(--sb-primary-hue)
+  );
+  --sb-primary-solid: oklch(0.43627 0.11 var(--sb-primary-hue));
+  --sb-primary-solid-hover: oklch(
+    from var(--sb-primary-solid)
+      calc(
+        l + var(--sb-button-fill-hover-delta) * var(--sb-tone-span) /
+          max(var(--sb-tone-span), calc(var(--sb-tone-span) * -1))
+      )
+      c h
+  );
+  --sb-primary-solid-foreground: oklch(0.95 0.00275 var(--sb-primary-hue));
+  --sb-secondary: oklch(
+    from var(--sb-background) calc(l + var(--sb-elevation-step) * var(--sb-elevation-3)) c h
+  );
+  --sb-secondary-foreground: var(--sb-foreground);
+  --sb-tertiary: oklch(from var(--sb-foreground) l c h / var(--sb-tertiary-alpha));
+  --sb-tertiary-foreground-mix: calc(
+    var(--sb-tertiary-foreground-level) + (1 - var(--sb-tertiary-foreground-level)) * var(--sb-contrast-up) -
+      var(--sb-tertiary-foreground-level) * 0.5 * var(--sb-contrast-down)
+  );
+  --sb-tertiary-foreground: oklch(
+    calc(var(--sb-surface) + var(--sb-tone-span) * var(--sb-tertiary-foreground-mix))
+      var(--sb-foreground-chroma) var(--sb-surface-hue)
+  );
+  --sb-muted: oklch(from var(--sb-foreground) l c h / var(--sb-muted-alpha));
+  --sb-muted-foreground-mix: calc(
+    var(--sb-muted-foreground-level) + (1 - var(--sb-muted-foreground-level)) * var(--sb-contrast-up) -
+      var(--sb-muted-foreground-level) * 0.5 * var(--sb-contrast-down)
+  );
+  --sb-muted-foreground: oklch(
+    calc(var(--sb-surface) + var(--sb-tone-span) * var(--sb-muted-foreground-mix)) var(--sb-foreground-chroma)
+      var(--sb-surface-hue)
+  );
+  --sb-accent: oklch(from var(--sb-foreground) l c h / var(--sb-accent-alpha));
+  --sb-accent-foreground: var(--sb-foreground);
+  --sb-field-alpha: 0.015;
+  --sb-field: oklch(0 0 0 / var(--sb-field-alpha));
+  --sb-control-raised: oklch(1 0 0 / calc(var(--sb-muted-alpha) * 0.65));
+  --sb-control: var(--sb-control-raised);
+  --sb-warning: oklch(var(--sb-warning-lightness) var(--sb-expressive-chroma) var(--sb-warning-hue));
+  --sb-warning-hover: oklch(
+    from var(--sb-warning)
+      calc(
+        l + var(--sb-button-fill-hover-delta) * var(--sb-tone-span) /
+          max(var(--sb-tone-span), calc(var(--sb-tone-span) * -1))
+      )
+      c h
+  );
+  --sb-destructive: oklch(
+    var(--sb-destructive-lightness) var(--sb-expressive-chroma) var(--sb-destructive-hue)
+  );
+  --sb-destructive-hover: oklch(
+    from var(--sb-destructive)
+      calc(
+        l + var(--sb-button-fill-hover-delta) * var(--sb-tone-span) /
+          max(var(--sb-tone-span), calc(var(--sb-tone-span) * -1))
+      )
+      c h
+  );
+  --sb-warning-foreground: oklch(
+    from var(--sb-warning) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
+  );
+  --sb-destructive-foreground: oklch(
+    from var(--sb-destructive) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
+  );
+  --sb-info: oklch(var(--sb-info-lightness) var(--sb-expressive-chroma) var(--sb-info-hue));
+  --sb-info-foreground: oklch(
+    from var(--sb-info) clamp(0.12, calc((0.62 - l) * 100), 0.99) calc(c * 0.08) h
+  );
+  --sb-border-destructive: oklch(from var(--sb-destructive) l c h / 30%);
+  --sb-border-warning: oklch(from var(--sb-warning) l c h / 30%);
+  --sb-border-info: oklch(from var(--sb-info) l c h / 30%);
+  --sb-border-brand-default: oklch(from hsl(var(--sb-brand-default)) l c h / 30%);
+  --sb-border-primary-bright: oklch(from var(--sb-primary-bright) l c h / 30%);
+  --sb-border: oklch(
+    from var(--sb-foreground) l calc(c * 0.54) h / calc(2% + 20% * var(--sb-contrast-border))
+  );
+  --sb-input: oklch(
+    from var(--sb-foreground) l calc(c * 0.5) h / calc(3% + 38% * var(--sb-contrast-border))
+  );
+  --sb-border-control-hover: oklch(
+    from var(--sb-foreground) l calc(c * 0.5) h / calc(12% + 58% * var(--sb-contrast-border))
+  );
+  --sb-ring: oklch(from var(--sb-primary-bright) l c h / 55%);
+  --sb-foreground-default: var(--sb-foreground);
+  --sb-foreground-light: var(--sb-muted-foreground);
+  --sb-foreground-lighter: var(--sb-tertiary-foreground);
+  --sb-foreground-muted: var(--sb-tertiary-foreground);
+  --sb-background-default: var(--sb-background);
+  --sb-background-200: var(--sb-card);
+  --sb-background-alternative-default: var(--sb-background);
+  --sb-background-alternative-200: var(--sb-card);
+  --sb-background-selection: var(--sb-accent);
+  --sb-background-control: var(--sb-accent);
+  --sb-background-surface-75: var(--sb-card);
+  --sb-background-surface-100: var(--sb-card);
+  --sb-background-surface-200: var(--sb-muted);
+  --sb-background-surface-300: var(--sb-secondary);
+  --sb-background-surface-400: var(--sb-tertiary);
+  --sb-background-overlay-default: var(--sb-secondary);
+  --sb-background-overlay-hover: var(--sb-accent);
+  --sb-background-muted: var(--sb-muted);
+  --sb-background-button-default: var(--sb-secondary);
+  --sb-background-dialog-default: var(--sb-popover);
+  --sb-background-dash-sidebar: var(--sb-background);
+  --sb-background-dash-canvas: var(--sb-background);
+  --sb-border-default: var(--sb-border);
+  --sb-border-muted: var(--sb-border);
+  --sb-border-secondary: var(--sb-border-muted);
+  --sb-border-overlay: oklch(
+    from var(--sb-foreground) l calc(c * 0.5) h / calc(4% + 34% * var(--sb-contrast-border))
+  );
+  --sb-border-control: var(--sb-input);
+  --sb-border-alternative: var(--sb-border);
+  --sb-border-strong: var(--sb-input);
+  --sb-border-stronger: oklch(
+    from var(--sb-foreground) l calc(c * 0.5) h / calc(5% + 45% * var(--sb-contrast-border))
+  );
+  --sb-border-button-default: var(--sb-border);
+  --sb-border-button-hover: var(--sb-border-stronger);
+  --sb-sidebar-background: var(--sb-background-dash-sidebar);
+  --sb-sidebar-foreground: var(--sb-foreground-default);
+  --sb-sidebar-primary: var(--sb-foreground-default);
+  --sb-sidebar-primary-foreground: var(--sb-warning);
+  --sb-sidebar-accent: var(--sb-background-selection);
+  --sb-sidebar-accent-foreground: var(--sb-foreground-default);
+  --sb-sidebar-border: var(--sb-border-default);
+  --sb-sidebar-ring: var(--sb-ring);
+}
+

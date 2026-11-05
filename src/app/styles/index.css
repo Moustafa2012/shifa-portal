@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Alyamama:wght@300..900&family=Source+Code+Pro:wght@400;500&display=swap');
+
+/* =====================================================================
+   Shifa Portal Design System
+   Modular CSS Architecture with shadcn/ui & Tailwind Integration
+   ===================================================================== */
+
+/* 1. Design Tokens (OKLCH system, light/dark palettes, Shifa tokens, shadcn tokens) */
+@import "./tokens/index.css";
+
+/* 2. Base & Typography */
+@import "./base/index.css";
+
+/* 3. Core UI Components */
+@import "./components/index.css";
+
+/* 4. Application Layout & App Shell */
+@import "./layout/index.css";
+
+/* 5. Clinical & Dental Specialty Modules */
+@import "./clinical/index.css";
+
+/* 6. Pages (Marketing, Authentication, Account) */
+@import "./pages/index.css";
+
+/* 7. Utilities (Animations, Print, Mobile Overrides) */
+@import "./utilities/index.css";
+
+/* 8. Tailwind CSS (Base, Components, Utilities for shadcn/ui) */
+@import "./tailwind.css";

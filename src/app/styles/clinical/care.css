@@ -1,0 +1,202 @@
+/* =====================================================================
+   Care, Reminders & Emergency Card (Migration 0031)
+   Notification bell, follow-up reminders, attention triggers, and emergency card.
+   ===================================================================== */
+
+/* Notification Bell */
+.shell-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 999px;
+  color: var(--muted);
+  text-decoration: none;
+  flex: none;
+}
+
+.shell-bell:hover {
+  color: var(--text);
+  background: var(--surface-2, rgba(127,127,127,.12));
+}
+
+.shell-bell .bell-badge {
+  position: absolute;
+  inset-block-start: -2px;
+  inset-inline-end: -2px;
+  min-inline-size: 16px;
+  block-size: 16px;
+  padding-inline: 4px;
+  border-radius: 999px;
+  background: var(--sb-destructive-default, #ca3214);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* Care Reminders */
+.reminder-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: .5rem;
+}
+
+.reminder {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  padding: .55rem .7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-inline-start-width: 3px;
+  min-width: 0;
+}
+
+.reminder.overdue {
+  border-inline-start-color: var(--sb-destructive-default, #ca3214);
+}
+
+.reminder.today,
+.reminder.soon {
+  border-inline-start-color: var(--sb-warning-default, #dc7b18);
+}
+
+.reminder-icon {
+  color: var(--muted);
+  display: inline-flex;
+}
+
+.reminder-main {
+  flex: 1 1 14rem;
+  min-width: 0;
+  display: grid;
+  gap: .15rem;
+}
+
+.reminder-text {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.reminder-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .2rem .8rem;
+  font-size: .8rem;
+  color: var(--muted);
+}
+
+.reminder-actions {
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+}
+
+/* Needs Attention List */
+.attention-list {
+  list-style: none;
+  margin: .5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: .4rem;
+}
+
+.attention-list li {
+  padding-inline-start: .6rem;
+  border-inline-start: 3px solid var(--border-strong, #ccc);
+  overflow-wrap: anywhere;
+}
+
+.attention-list li.attention-bad {
+  border-inline-start-color: var(--sb-destructive-default, #ca3214);
+}
+
+.attention-list li.attention-warn {
+  border-inline-start-color: var(--sb-warning-default, #dc7b18);
+}
+
+.attention-labs {
+  display: grid;
+  gap: .45rem;
+  margin-block-end: .6rem;
+}
+
+.attention-lab {
+  gap: .4rem .8rem;
+}
+
+/* Emergency Card */
+.emergency-card {
+  border: 2px solid var(--sb-destructive-default, #ca3214);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: grid;
+  gap: .6rem;
+  background: var(--sb-card, transparent);
+  min-width: 0;
+}
+
+.emergency-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.emergency-head h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.emergency-kicker {
+  margin: 0;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--sb-destructive-default, #ca3214);
+}
+
+.emergency-blood {
+  display: grid;
+  justify-items: center;
+  padding: .4rem .9rem;
+  border: 2px solid currentColor;
+  border-radius: var(--radius);
+  color: var(--sb-destructive-default, #ca3214);
+  min-inline-size: 5.5rem;
+}
+
+.emergency-blood strong {
+  font-size: 1.8rem;
+  line-height: 1.1;
+}
+
+.emergency-blood.none {
+  color: var(--muted);
+}
+
+.emergency-card h3 {
+  margin: 0 0 .25rem;
+  font-size: .95rem;
+}
+
+.emergency-list {
+  margin: 0;
+  padding-inline-start: 1.2rem;
+  display: grid;
+  gap: .2rem;
+  overflow-wrap: anywhere;
+}
+
+.emergency-qr {
+  margin-block: .25rem;
+}
+

@@ -1,0 +1,259 @@
+/* =====================================================================
+   Data Display Components
+   Tables, Key-Value pairs, Records, Charts, Timelines, and Lists.
+   ===================================================================== */
+
+/* Tables */
+.table-wrap {
+  overflow-x: auto;
+  position: relative;
+  border: 1px solid var(--sb-border);
+  border-radius: var(--radius-lg);
+  background: var(--sb-card);
+  box-shadow: var(--shadow-sm);
+}
+
+table.t {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .875rem;
+}
+
+table.t th,
+table.t td {
+  padding: .625rem 1rem;
+  border-block-end: 1px solid var(--sb-border);
+  text-align: start;
+  vertical-align: top;
+}
+
+table.t th {
+  height: 2.5rem;
+  padding: 0 1rem;
+  vertical-align: middle;
+  background: var(--sb-card);
+  color: var(--lighter);
+  font-weight: 500;
+  font-size: .75rem;
+  letter-spacing: .05em;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  border-block-end: 1px solid var(--sb-border);
+}
+
+:lang(en) table.t th {
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+
+table.t th:first-child {
+  border-start-start-radius: 8px;
+}
+
+table.t th:last-child {
+  border-start-end-radius: 8px;
+}
+
+table.t tbody tr {
+  transition: background .12s;
+}
+
+table.t tbody tr:hover {
+  background: var(--sb-muted);
+}
+
+table.t tbody tr:last-child td {
+  border-block-end: 0;
+}
+
+tr.superseded td {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--muted) 50%, transparent);
+}
+
+/* Key-Value Pairs */
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: .35rem 1rem;
+  font-size: .875rem;
+  margin: .45rem 0 0;
+}
+
+.kv dt {
+  color: var(--lighter);
+}
+
+.kv dd {
+  color: var(--text);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* Records */
+.rec {
+  background: var(--sb-card);
+  border: 1px solid var(--sb-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: .875rem 1rem;
+}
+
+.rec + .rec {
+  margin-block-start: .65rem;
+}
+
+.rec.error {
+  opacity: .6;
+  background: var(--sb-muted);
+}
+
+.rec-title {
+  font-weight: 500;
+}
+
+.rec-meta {
+  color: var(--lighter);
+  font-size: .8125rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem .9rem;
+  margin-block-start: .25rem;
+}
+
+.rec-body {
+  margin-block-start: .45rem;
+  white-space: pre-wrap;
+}
+
+/* Charts & Legends */
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chart .grid-l {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chart .axis {
+  fill: var(--muted);
+  font-size: 11px;
+  font-family: var(--font);
+}
+
+.chart .ref {
+  stroke: var(--muted);
+  stroke-dasharray: 4 4;
+  stroke-width: 1;
+}
+
+.chart .reflab {
+  fill: var(--muted);
+  font-size: 10px;
+}
+
+.chart .line {
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.chart .line.prev {
+  stroke-dasharray: 5 4;
+  opacity: .55;
+}
+
+.chart .dot {
+  stroke: var(--surface);
+  stroke-width: 1.8;
+}
+
+.chart .s0 { stroke: var(--c1); fill: var(--c1); }
+.chart .s1 { stroke: var(--c2); fill: var(--c2); }
+.chart .s2 { stroke: var(--c3); fill: var(--c3); }
+.chart .s3 { stroke: var(--c4); fill: var(--c4); }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem 1rem;
+  font-size: .85rem;
+}
+
+.legend i {
+  display: inline-block;
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-inline-end: .35rem;
+}
+
+/* Timeline */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 11px;
+  width: 2px;
+  background: linear-gradient(var(--border-strong), var(--border));
+}
+
+.timeline li {
+  position: relative;
+  padding-inline-start: 2rem;
+  padding-block-end: 1rem;
+}
+
+.timeline li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 5px;
+  inset-block-start: .5rem;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 0 4px var(--bg);
+}
+
+/* Plain List */
+.plain-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: .35rem;
+}
+
+.plain-list > li:not(.member-row) {
+  padding-inline-start: .9rem;
+  position: relative;
+  overflow-wrap: anywhere;
+}
+
+.plain-list > li:not(.member-row)::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: .6em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+

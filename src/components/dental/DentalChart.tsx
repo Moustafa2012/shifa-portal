@@ -1,4 +1,6 @@
 "use client";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 import { useMemo, useState, type ReactNode } from "react";
 import type { Lang } from "@/lib/i18n";
@@ -110,10 +112,12 @@ export function DentalChart({
   return (
     <div className="dental-chart">
       <div className="row between" style={{ marginBlockEnd: ".5rem" }}>
-        <div className="chart-views" role="group" aria-label={t("طريقة العرض", "View")}>
-          <button type="button" aria-pressed={view === "pano"} onClick={() => setView("pano")}>{t("بانوراما", "Panoramic")}</button>
-          <button type="button" aria-pressed={view === "surfaces"} onClick={() => setView("surfaces")}>{t("الأسطح", "Surfaces")}</button>
-        </div>
+        <Tabs value={view} onValueChange={(v) => setView(v as "pano" | "surfaces")}>
+          <TabsList className="chart-views">
+            <TabsTrigger value="pano">{t("بانوراما", "Panoramic")}</TabsTrigger>
+            <TabsTrigger value="surfaces">{t("الأسطح", "Surfaces")}</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
       {view === "pano"
         ? <Panoramic dentition={dentition} teeth={teeth} lang={lang} selected={sel} onSelect={setSel} idPrefix="chart" />
@@ -135,7 +139,7 @@ export function DentalChart({
         <section className="tooth-panel" aria-live="polite" aria-label={t(`السن ${sel}`, `Tooth ${sel}`)}>
           <div className="row between">
             <h3><span className="ltr">{sel}</span> — {toothName(sel, lang)}</h3>
-            <button type="button" className="btn ghost sm" onClick={() => setSel(null)}>{t("إغلاق", "Close")}</button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setSel(null)}>{t("إغلاق", "Close")}</Button>
           </div>
           <p>
             {v?.status ? <>{t("الحالة", "State")}: <strong>{lbl(TOOTH_STATUS, v.status, lang)}</strong>

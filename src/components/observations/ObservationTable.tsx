@@ -1,3 +1,4 @@
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Pencil, Eraser } from "lucide-react";
 import { getObsTypes } from "@/lib/data";
 import { fmtDateTime } from "@/lib/format";
@@ -24,14 +25,13 @@ export async function ObservationTable({
   const t = (ar: string, en: string) => (lang === "ar" ? ar : en);
   const d = showDelta ? deltas(rows) : new Map<string, number | null>();
   return (
-    <div className="table-wrap">
-      <table className="t">
-        <thead><tr>
-          <th>{t("الوقت", "When")}</th><th>{t("القياس", "Measure")}</th><th>{t("النتيجة", "Result")}</th>
-          {showDelta && <th>{t("التغير", "Change")}</th>}<th>{t("المرجع", "Reference")}</th><th>{t("التصنيف", "Flag")}</th><th>{t("الظروف والمصدر", "Conditions & source")}</th>
-          {canWrite && <th><span className="sr-only">{t("إجراءات", "Actions")}</span></th>}
-        </tr></thead>
-        <tbody>
+    <Table className="t">
+        <TableHeader><TableRow>
+          <TableHead>{t("الوقت", "When")}</TableHead><TableHead>{t("القياس", "Measure")}</TableHead><TableHead>{t("النتيجة", "Result")}</TableHead>
+          {showDelta && <TableHead>{t("التغير", "Change")}</TableHead>}<TableHead>{t("المرجع", "Reference")}</TableHead><TableHead>{t("التصنيف", "Flag")}</TableHead><TableHead>{t("الظروف والمصدر", "Conditions & source")}</TableHead>
+          {canWrite && <TableHead><span className="sr-only">{t("إجراءات", "Actions")}</span></TableHead>}
+        </TableRow></TableHeader>
+        <TableBody>
           {rows.map((o) => {
             const ty = byId.get(o.type_id);
             const superseded = o.status === "amended" || o.status === "entered_in_error";
@@ -39,9 +39,9 @@ export async function ObservationTable({
             const ref = o.ref_low != null || o.ref_high != null ? `${o.ref_low ?? ""} – ${o.ref_high ?? ""}` : o.ref_text ?? "";
             const delta = d.get(o.id);
             return (
-              <tr key={o.id} className={superseded ? "superseded" : undefined}>
-                <td className="nowrap">{fmtDateTime(o.effective_at, lang, tz)}</td>
-                <td>
+              <TableRow key={o.id} className={superseded ? "superseded" : undefined}>
+                <TableCell className="nowrap">{fmtDateTime(o.effective_at, lang, tz)}</TableCell>
+                <TableCell>
                   {o.custom_name || (ty ? (lang === "ar" ? ty.name_ar : ty.name_en) : "—")}
                   <div className="row" style={{ gap: ".25rem" }}>
                     {o.supersedes_id && <Chip tone="info">{t("تصحيح", "Correction")}</Chip>}
@@ -49,22 +49,22 @@ export async function ObservationTable({
                     {o.status === "entered_in_error" && <Chip tone="bad">{t("بالخطأ", "In error")}</Chip>}
                     {o.status === "preliminary" && <Chip tone="warn">{t("أولية", "Preliminary")}</Chip>}
                   </div>
-                </td>
-                <td className="nowrap"><strong><span className="ltr">{valueText(o, ty)}</span></strong> <span className="muted small ltr">{o.unit ?? ""}</span></td>
-                {showDelta && <td className="nowrap">{delta == null ? <span className="muted small" title={t("لا مقارنة: وحدة مختلفة أو أول قراءة", "No comparison: different unit or first reading")}>—</span> : <span className="ltr">{delta > 0 ? "+" : ""}{Number(delta.toFixed(2))}</span>}</td>}
-                <td className="nowrap muted small"><span className="ltr">{ref}</span></td>
-                <td>{superseded ? null : <InterpChip value={o.interpretation} lang={lang} />}
+                </TableCell>
+                <TableCell className="nowrap"><strong><span className="ltr">{valueText(o, ty)}</span></strong> <span className="muted small ltr">{o.unit ?? ""}</span></TableCell>
+                {showDelta && <TableCell className="nowrap">{delta == null ? <span className="muted small" title={t("لا مقارنة: وحدة مختلفة أو أول قراءة", "No comparison: different unit or first reading")}>—</span> : <span className="ltr">{delta > 0 ? "+" : ""}{Number(delta.toFixed(2))}</span>}</TableCell>}
+                <TableCell className="nowrap muted small"><span className="ltr">{ref}</span></TableCell>
+                <TableCell>{superseded ? null : <InterpChip value={o.interpretation} lang={lang} />}
                   {o.interpretation_basis === "reported_by_lab" && <div className="muted small">{t("كما ورد من المختبر", "as reported by the lab")}</div>}
-                </td>
-                <td className="small">
+                </TableCell>
+                <TableCell className="small">
                   {[o.context ? lbl(ctxOpts, o.context, lang) : "", lbl(SETTING, o.setting, lang), o.device].filter(Boolean).join(" · ")}
                   <div className="muted">{lbl(SOURCE, o.source, lang)}{o.source_detail ? ` (${o.source_detail})` : ""} · {lbl(VERIFICATION, o.verification, lang)}</div>
                   {o.symptoms && <div>{t("أعراض", "Symptoms")}: {o.symptoms}</div>}
                   {o.notes && <div>{o.notes}</div>}
                   {o.amendment_reason && <div className="muted">{t("السبب", "Reason")}: {o.amendment_reason}</div>}
-                </td>
+                </TableCell>
                 {canWrite && (
-                  <td style={{ minWidth: 190 }}>
+                  <TableCell style={{ minWidth: 190 }}>
                     {o.status === "final" && (
                       <details className="fold">
                         <summary><Pencil size={13} aria-hidden="true" />{t("تصحيح", "Correct")}</summary>
@@ -94,13 +94,12 @@ export async function ObservationTable({
                         </div>
                       </details>
                     )}
-                  </td>
+                  </TableCell>
                 )}
-              </tr>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
   );
 }

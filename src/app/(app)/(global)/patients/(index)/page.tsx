@@ -1,64 +1,72 @@
 import Link from "next/link";
-import { Plus, TriangleAlert } from "lucide-react";
+import { Plus } from "lucide-react";
 import { i18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
-import { ageLabel } from "@/lib/format";
-import { lbl, SEX } from "@/lib/labels";
-import { Banner, Chip, Empty, PageHead } from "@/components/ui";
-import { Avatar } from "@/components/Avatar";
+import { PageHead } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import type { PatientRow } from "@/lib/types";
 import { getAttention } from "@/lib/care/server";
-import { attentionBadges, countsByPatient } from "@/lib/care/attention";
+import { countsByPatient } from "@/lib/care/attention";
+import { PatientsDirectory } from "@/components/patients/PatientsDirectory";
 
 export const metadata = { title: "المرضى" };
 
-export default async function PatientsPage({ searchParams }: { searchParams: { deleted?: string } }) {
+export default async function PatientsPage({
+  searchParams,
+}: {
+  searchParams: { deleted?: string };
+}) {
   const { lang, t } = i18n();
   const supabase = createClient();
-  const [{ data: patients }, { data: members }, { data: allergies }, attention] = await Promise.all([
-    supabase.from("patients").select("*").order("created_at"),
-    supabase.from("patient_members").select("patient_id, role").is("revoked_at", null),
-    supabase.from("allergies").select("patient_id").eq("status", "active").eq("record_status", "active"),
-    getAttention(),
-  ]);
+  const [{ data: patients }, { data: members }, { data: allergies }, attention] =
+    await Promise.all([
+      supabase.from("patients").select("*").order("created_at"),
+      supabase
+        .from("patient_members")
+        .select("patient_id, role")
+        .is("revoked_at", null),
+      supabase
+        .from("allergies")
+        .select("patient_id")
+        .eq("status", "active")
+        .eq("record_status", "active"),
+      getAttention(),
+    ]);
+
   const attn = countsByPatient(attention);
-  const roleOf = new Map((members ?? []).map((m) => [m.patient_id as string, m.role as string]));
-  const allergic = new Set((allergies ?? []).map((a) => a.patient_id as string));
+  const attentionMap = Object.fromEntries(attn.entries());
+  const roles = Object.fromEntries(
+    (members ?? []).map((m) => [m.patient_id as string, m.role as string])
+  );
+  const allergicIds = (allergies ?? []).map((a) => a.patient_id as string);
   const list = (patients ?? []) as PatientRow[];
+
   return (
     <>
       <PageHead
-        title={t("ملفات المرضى", "Patient files")}
-        sub={t("لكل مريض ملف صحي مستقل. يمكنك إدارة ملفك وملفات من ترعاهم (الأطفال مثلاً).", "Each patient has an independent health file. Manage your own and those you care for, such as children.")}
-        actions={<Link className="btn primary" href="/patients/new"><Plus size={16} aria-hidden="true" />{t("ملف جديد", "New file")}</Link>}
-      />
-      {searchParams.deleted && <div style={{ marginBlockEnd: "1rem" }}><Banner tone="ok">{t("حُذف الملف نهائياً.", "The file was permanently deleted.")}</Banner></div>}
-      {list.length === 0 ? (
-        <Empty>
-          <p>{t("لا توجد ملفات بعد. أنشئ ملفك الصحي الأول.", "No files yet. Create your first health file.")}</p>
-          <Link className="btn primary" href="/patients/new">{t("إنشاء ملف", "Create a file")}</Link>
-        </Empty>
-      ) : (
-        <div className="grid cols-3">
-          {list.map((p) => (
-            <Link key={p.id} href={`/patients/${p.id}`} className="card" style={{ textDecoration: "none", color: "inherit" }}>
-              <div className="row" style={{ flexWrap: "nowrap", gap: ".75rem", marginBlockEnd: ".6rem" }}>
-                <Avatar size="sm" name={lang === "en" && p.full_name_en ? p.full_name_en : p.full_name} src={p.photo_path ? `/api/avatar?p=${p.id}&v=${encodeURIComponent(p.updated_at)}` : null} />
-                <div style={{ minWidth: 0 }}>
-                  <h2 style={{ marginBlockEnd: 0 }}>{lang === "en" && p.full_name_en ? p.full_name_en : p.full_name}</h2>
-                  <p className="muted small" style={{ margin: 0 }}><span className="ltr">{p.mrn}</span> · {ageLabel(p.date_of_birth, lang)} · {lbl(SEX, p.sex, lang)}</p>
-                </div>
-              </div>
-              <div className="row">
-                <Chip tone="info">{roleOf.get(p.id) === "guardian" ? t("ولي أمر", "Guardian") : roleOf.get(p.id) === "owner" ? t("ملفك", "Your file") : t("رعاية", "Care")}</Chip>
-                {p.deletion_requested_at && <Chip tone="warn">{t("مجدول للحذف", "Scheduled for deletion")}</Chip>}
-                {attentionBadges(attn.get(p.id), t).map((b) => <Chip key={b.code} tone={b.tone === "bad" ? "bad" : b.tone === "warn" ? "warn" : b.tone === "info" ? "info" : "muted"}>{b.text}</Chip>)}
-                {allergic.has(p.id) && <Chip tone="bad"><TriangleAlert size={13} aria-hidden="true" />{t("حساسية موثقة", "Allergies on file")}</Chip>}
-              </div>
+        title={t("ملفات المرضى", "Patient Files")}
+        sub={t(
+          "لكل مريض ملف صحي مستقل. يمكنك إدارة ملفك وملفات من ترعاهم (الأطفال مثلاً) والوصول السريع لكافة البيانات.",
+          "Each patient has an independent health file. Manage your own and those you care for, such as children, with quick access to all clinical records."
+        )}
+        actions={
+          <Button asChild className="gap-2">
+            <Link href="/patients/new">
+              <Plus className="size-4" aria-hidden="true" />
+              {t("ملف جديد", "New file")}
             </Link>
-          ))}
-        </div>
-      )}
+          </Button>
+        }
+      />
+
+      <PatientsDirectory
+        patients={list}
+        roles={roles}
+        allergicIds={allergicIds}
+        attentionMap={attentionMap}
+        deletedNotice={searchParams.deleted}
+        lang={lang}
+      />
     </>
   );
 }
