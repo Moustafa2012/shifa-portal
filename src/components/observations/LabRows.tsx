@@ -5,7 +5,7 @@ import { useState } from "react";
 /** units: the default unit first, then units the database accepts as equivalent; other: a free-named test */
 export interface LabTypeOpt { id: string; name: string; unit: string | null; units: string[]; kind: string; group: string; other: boolean }
 export interface LabRowsText {
-  test: string; result: string; unit: string; refLow: string; refHigh: string; flag: string; add: string; remove: string; choose: string;
+  test: string; result: string; unit: string; refLow: string; refHigh: string; refText?: string; refTextHint?: string; flag: string; add: string; remove: string; choose: string;
   flags: { value: string; label: string }[]; row: string; customName: string; customHint: string;
 }
 
@@ -17,6 +17,13 @@ export function LabRows({ types, text }: { types: LabTypeOpt[]; text: LabRowsTex
   const groups = Array.from(new Set(types.map((x) => x.group)));
   return (
     <div className="stack">
+      <datalist id="qualitative_presets">
+        <option value="سلبي (Negative)" />
+        <option value="إيجابي (Positive)" />
+        <option value="طبيعي (Normal)" />
+        <option value="أثر (Trace)" />
+        <option value="عكر قليلاً (Slight Turbid)" />
+      </datalist>
       {keys.map((k, i) => {
         const t = types.find((x) => x.id === chosen[k]);
         return (
@@ -38,11 +45,31 @@ export function LabRows({ types, text }: { types: LabTypeOpt[]; text: LabRowsTex
                 <div className="field wide"><label htmlFor={`r${k}_custom_name`}>{text.customName} <span className="req">*</span></label>
                   <input id={`r${k}_custom_name`} name={`r${k}_custom_name`} type="text" maxLength={120} required placeholder={text.customHint} /></div>
               )}
-              <div className="field"><label htmlFor={`r${k}_value`}>{text.result}</label><input id={`r${k}_value`} name={`r${k}_value`} type="text" inputMode={t?.kind === "text" ? "text" : "decimal"} dir="ltr" autoComplete="off" /></div>
+              <div className="field">
+                <label htmlFor={`r${k}_value`}>{text.result}</label>
+                <input
+                  id={`r${k}_value`}
+                  name={`r${k}_value`}
+                  type="text"
+                  inputMode={t?.kind === "text" ? "text" : "decimal"}
+                  dir={t?.kind === "text" ? "auto" : "ltr"}
+                  autoComplete="off"
+                  list={t?.kind === "text" ? "qualitative_presets" : undefined}
+                />
+              </div>
               <div className="field"><label htmlFor={`r${k}_unit`}>{text.unit}</label><input id={`r${k}_unit`} name={`r${k}_unit`} type="text" dir="ltr" placeholder={t?.unit ?? ""} list={t && t.units.length > 1 ? `units_${k}` : undefined} />
                 {t && t.units.length > 1 && <datalist id={`units_${k}`}>{t.units.map((u) => <option key={u} value={u} />)}</datalist>}</div>
-              <div className="field"><label htmlFor={`r${k}_ref_low`}>{text.refLow}</label><input id={`r${k}_ref_low`} name={`r${k}_ref_low`} type="text" inputMode="decimal" dir="ltr" /></div>
-              <div className="field"><label htmlFor={`r${k}_ref_high`}>{text.refHigh}</label><input id={`r${k}_ref_high`} name={`r${k}_ref_high`} type="text" inputMode="decimal" dir="ltr" /></div>
+              {t?.kind === "text" ? (
+                <div className="field wide">
+                  <label htmlFor={`r${k}_ref_text`}>{text.refText ?? "المرجع النصي"}</label>
+                  <input id={`r${k}_ref_text`} name={`r${k}_ref_text`} type="text" placeholder={text.refTextHint ?? "مثال: Negative أو < 1.0"} />
+                </div>
+              ) : (
+                <>
+                  <div className="field"><label htmlFor={`r${k}_ref_low`}>{text.refLow}</label><input id={`r${k}_ref_low`} name={`r${k}_ref_low`} type="text" inputMode="decimal" dir="ltr" /></div>
+                  <div className="field"><label htmlFor={`r${k}_ref_high`}>{text.refHigh}</label><input id={`r${k}_ref_high`} name={`r${k}_ref_high`} type="text" inputMode="decimal" dir="ltr" /></div>
+                </>
+              )}
               <div className="field"><label htmlFor={`r${k}_flag`}>{text.flag}</label>
                 <select id={`r${k}_flag`} name={`r${k}_flag`} defaultValue="">{text.flags.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}</select>
               </div>

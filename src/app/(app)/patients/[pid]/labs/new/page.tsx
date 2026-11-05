@@ -49,6 +49,7 @@ export default async function NewLabReport({ params }: { params: { pid: string }
           <h2>{t("النتائج", "Results")}</h2>
           <LabRows types={labTypes} text={{
             test: t("التحليل", "Test"), result: t("النتيجة", "Result"), unit: t("الوحدة", "Unit"), refLow: t("المرجع الأدنى", "Ref. low"), refHigh: t("المرجع الأعلى", "Ref. high"),
+            refText: t("المرجع النصي", "Ref. text"), refTextHint: t("مثال: سلبي (Negative) أو < 1.0", "e.g. Negative or < 1.0"),
             flag: t("علامة المختبر", "Lab flag"), add: t("إضافة تحليل", "Add a test"), remove: t("حذف الصف", "Remove row"), choose: t("اختر…", "Choose…"), row: t("نتيجة", "Result"),
             flags: LAB_FLAG.map((f) => ({ value: f.value, label: f[lang] })),
             customName: t("اسم التحليل كما في التقرير", "Test name as printed"), customHint: t("مثال: RDW-SD", "e.g. RDW-SD"),

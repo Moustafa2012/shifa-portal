@@ -91,7 +91,13 @@ export const REPORT_CATALOG: ReportCatalogEntry[] = [
     },
     badge: { ar: "أسنان", en: "Dental" },
     icon: "smile",
-    buildUrl: (pid, opts) => `/api/patients/${pid}/dental/summary/pdf?${opts?.lang ? `lang=${opts.lang}&` : ""}${opts?.dl ? "dl=1" : ""}`.replace(/\?$/, ""),
+    buildUrl: (pid, opts) => {
+      const q = new URLSearchParams();
+      if (opts?.lang) q.set("lang", opts.lang);
+      if (opts?.dl) q.set("dl", "1");
+      const qs = q.toString();
+      return `/api/patients/${pid}/dental/summary/pdf${qs ? `?${qs}` : ""}`;
+    },
   },
   {
     id: "emergency",
@@ -103,7 +109,12 @@ export const REPORT_CATALOG: ReportCatalogEntry[] = [
     },
     badge: { ar: "طوارئ", en: "Emergency" },
     icon: "siren",
-    buildUrl: (pid, opts) => `/api/patients/${pid}/emergency/pdf?${opts?.lang ? `lang=${opts.lang}&` : ""}${opts?.dl ? "dl=1" : ""}`.replace(/\?$/, ""),
+    buildUrl: (pid, opts) => {
+      const q = new URLSearchParams();
+      if (opts?.lang) q.set("lang", opts.lang);
+      if (opts?.dl) q.set("dl", "1");
+      const qs = q.toString();
+      return `/api/patients/${pid}/emergency/pdf${qs ? `?${qs}` : ""}`;
+    },
   },
 ];
-

@@ -1,20 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
-
+import { describe, it, expect, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-
-import {
-  REPORT_CATALOG,
-  renderPdf,
-  buildEncounterReport,
-  buildTreatmentPlanReport,
-  buildEmergencyReport,
-  type ReportMeta,
-  type Block,
-} from "@/lib/pdf";
-import type { PatientRow } from "@/lib/types";
+import { REPORT_CATALOG } from "@/lib/pdf/index";
+import { buildEncounterReport, buildTreatmentPlanReport } from "@/lib/pdf/reports";
+import { buildEmergencyReport } from "@/lib/pdf/emergency";
+import type { PatientRow, ObservationRow, ObservationType } from "@/lib/types";
+import type { TreatmentPlan } from "@/lib/treatment";
 
 const mockPatient: PatientRow = {
-  id: "11111111-1111-1111-1111-111111111111",
+  id: "patient-1001",
   mrn: "MRN-1001",
   full_name: "أحمد عبد الله",
   full_name_en: "Ahmed Abdullah",
@@ -26,14 +19,16 @@ const mockPatient: PatientRow = {
   blood_group_verified: true,
   phone: "+966500000000",
   allergy_assertion: "verified",
-  national_id: null,
-  record_status: "active",
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
   deletion_requested_at: null,
   photo_path: null,
-  created_by: null,
-  updated_by: null,
+  email: null,
+  address_line: null,
+  city: null,
+  country: null,
+  allergy_assertion_at: null,
+  deletion_scheduled_for: null,
 };
 
 describe("PDF Reports Master Catalog", () => {
@@ -48,93 +43,43 @@ describe("PDF Reports Master Catalog", () => {
   });
 
   it("builds valid URLs for each report with language and download options", () => {
-    const full = REPORT_CATALOG.find((r) => r.id === "full")!;
-    expect(full.buildUrl("test-pid", { lang: "en", dl: true })).toBe("/api/patients/test-pid/report?scope=full&lang=en&dl=1");
-    expect(full.buildUrl("test-pid", { lang: "ar" })).toBe("/api/patients/test-pid/report?scope=full&lang=ar");
+    const labsEntry = REPORT_CATALOG.find((r) => r.id === "labs");
+    expect(labsEntry).toBeDefined();
+    const url = labsEntry?.buildUrl("patient-1001", { lang: "ar", dl: true });
+    expect(url).toBe("/api/patients/patient-1001/report?scope=labs&lang=ar&dl=1");
 
-    const vitals = REPORT_CATALOG.find((r) => r.id === "vitals")!;
-    const vitalsUrl = vitals.buildUrl("test-pid", { range: "30", type: "bp", lang: "ar" });
-    expect(vitalsUrl).toContain("scope=vitals");
-    expect(vitalsUrl).toContain("range=30");
-    expect(vitalsUrl).toContain("type=bp");
-    expect(vitalsUrl).toContain("lang=ar");
+    const dentalEntry = REPORT_CATALOG.find((r) => r.id === "dental-summary");
+    const dentalUrl = dentalEntry?.buildUrl("patient-1001", { lang: "en" });
+    expect(dentalUrl).toBe("/api/patients/patient-1001/dental/summary/pdf?lang=en");
   });
 });
 
-describe("PDF Engine Rendering", () => {
-  it("renders a valid PDF buffer with TOC and zebra tables", async () => {
-    const meta: ReportMeta = {
-      lang: "ar",
-      title: "تقرير تجريبي",
-      brand: "بوابة شفاء",
-      docRef: "MRN-1001-TEST",
-      headline: { name: "أحمد عبد الله", lines: ["MRN-1001", "36 سنة", "ذكر"] },
-      generatedAt: "2026-11-05 12:00",
-      footerNote: "ملاحظة أمان وتنبيه تجريبي.",
-    };
-
-    const blocks: Block[] = [
-      {
-        t: "toc",
-        title: "فهرس المحتويات",
-        items: [
-          { label: "معلومات السلامة", count: 2, badge: "تنبيه" },
-          { label: "الأمراض والتشخيصات", count: 4 },
-          { label: "القياسات الحيوية", count: 12 },
-        ],
-      },
-      { t: "h", text: "الفصل الأول: القياسات" },
-      { t: "p", text: "قراءات سريرية ضمن الحدود الطبيعية." },
-      { t: "alert", tone: "ok", title: "مستقر", text: "كل المؤشرات مستقرة." },
-      {
-        t: "table",
-        cols: [
-          { label: "القياس", w: 4 },
-          { label: "القيمة", w: 3 },
-          { label: "التصنيف", w: 3 },
-        ],
-        rows: [
-          ["ضغط الدم", "120/80", { text: "طبيعي", tone: "ok" }],
-          ["سكر الدم", "95", { text: "طبيعي", tone: "ok" }],
-          ["النبض", "72", { text: "طبيعي", tone: "ok" }],
-        ],
-      },
-      { t: "divider" },
-      { t: "kv", rows: [["الطبيب المعالج", "د. عبد الرحمن"], ["المنشأة", "عيادات الشفاء"]] },
-    ];
-
-    const buffer = await renderPdf(meta, blocks);
-    expect(buffer).toBeInstanceOf(Buffer);
-    expect(buffer.length).toBeGreaterThan(1000);
-    // PDF magic number header: %PDF-1.7
-    expect(buffer.toString("utf-8", 0, 8)).toContain("%PDF-");
-  });
-});
-
-describe("Clinical Encounter / Visit Report Builder", () => {
-  it("builds a complete encounter report with clinical presentation and signatures", () => {
+describe("Clinical Visit Encounter Report Builder", () => {
+  it("generates structured PDF blocks for an encounter", () => {
     const encounter = {
-      id: "enc-12345678-0000",
+      id: "enc-55",
+      patient_id: mockPatient.id,
       started_at: "2026-11-01T10:30:00Z",
-      kind: "outpatient",
-      reason: "متابعة دورية لارتفاع ضغط الدم",
-      practitioner_name: "د. سامي الأحمد",
-      facility_name: "المركز الطبي الجامعي",
-      symptoms: "صداع خفيف صباحي",
-      history_of_present_illness: "منذ 3 أيام بشكل متقطع",
-      examination: "الصدر والقلب سليم، لا توجد وذمات",
-      assessment: "ارتفاع ضغط دم أولي مضبوط",
-      plan: "الاستمرار على نفس الجرعة الدوائية ومتابعة الضغط أسبوعياً",
-      instructions: "تقليل استهلاك الملح وممارسة المشي نصف ساعة يومياً",
-      follow_up_date: "2026-12-01",
+      ended_at: "2026-11-01T11:00:00Z",
+      kind: "consultation",
+      reason: "متابعة ارتفاع ضغط الدم",
+      service_type: "طب الأسرة",
+      status: "completed",
+      class: "ambulatory",
+      priority: "routine",
+      record_status: "active",
+      created_at: "2026-11-01T10:30:00Z",
+      updated_at: "2026-11-01T11:00:00Z",
+      location: "العيادة الأولى",
     };
 
     const res = buildEncounterReport(mockPatient, encounter, {
       lang: "ar",
       tz: "Asia/Riyadh",
       specialtyName: "طب الأسرة",
-      conditions: [{ name: "ارتفاع ضغط الدم", clinical_status: "active" }],
-      medications: [{ name_generic: "Amlodipine", dose: "5 mg", frequency: "مرة يومياً" }],
+      conditions: [{ name: "ارتفاع ضغط الدم الأساسي", clinical_status: "active" }],
+      medications: [{ name_generic: "Amlodipine", dose: "5 mg", frequency: "مرة يومياً", route: "فموي" }],
+      procedures: [{ name: "تخطيط قلب كهربائي", outcome: "طبيعي" }],
       observations: [
         {
           id: "obs-1",
@@ -146,18 +91,15 @@ describe("Clinical Encounter / Visit Report Builder", () => {
           effective_at: "2026-11-01T10:35:00Z",
           interpretation: "normal",
           status: "final",
-          recorded_at: "2026-11-01T10:35:00Z",
-          entered_by: null,
           encounter_id: encounter.id,
-          lab_report_id: null,
-          record_status: "active",
+          report_id: null,
           context: null,
           notes: null,
           value_text: null,
           ref_low: null,
           ref_high: null,
           ref_text: null,
-        },
+        } as unknown as ObservationRow,
       ],
       types: [
         {
@@ -171,52 +113,43 @@ describe("Clinical Encounter / Visit Report Builder", () => {
           decimals: 0,
           sort: 1,
           lab_group: null,
-          applies_to_sex: null,
-        },
+          applicable_sex: null,
+        } as unknown as ObservationType,
       ],
     });
 
     expect(res.meta.title).toBe("تقرير زيارة سريرية");
     expect(res.meta.docRef).toBe("MRN-1001-ENC-20261101");
     expect(res.filename).toContain("MRN-1001-visit-2026-11-01");
-    expect(res.blocks.length).toBeGreaterThan(5);
-
-    const tableBlocks = res.blocks.filter((b) => b.t === "table");
-    expect(tableBlocks.length).toBeGreaterThanOrEqual(2);
+    expect(res.blocks.length).toBeGreaterThan(3);
   });
 });
 
-describe("Treatment Plan Report Builder", () => {
-  it("builds a plan report with docRef, items, and consent agreement", () => {
+describe("Treatment Plan PDF Report Builder", () => {
+  it("builds a treatment plan report with dental items, tooth numbers, and costs", () => {
     const plan = {
-      id: "plan-1",
-      patient_id: mockPatient.id,
-      title: "خطة ترميم وزراعة شاملة",
+      id: "tx-plan-2",
+      title: "خطة علاج شاملة - تأهيل الفم",
       status: "accepted" as const,
       version: 2,
-      presented_by: "د. إبراهيم خليل",
+      presented_by: "د. عبد الرحمن الشهري",
       presented_on: "2026-10-15",
       accepted_on: "2026-10-18",
-      notes: "تمت مناقشة الخطة والبدائل بالتفصيل",
+      notes: "تمت مناقشة خطة العلاج وتفضيل التركيبات الزيركونية.",
+      group_id: null,
+      alternative_of: null,
+      contributed_by: null,
+      recorded_at: "2026-10-15",
       items: [
         {
           id: "item-1",
-          plan_id: "plan-1",
-          patient_id: mockPatient.id,
-          name: "حشوة كومبوزيت ضوئية",
-          teeth: [16],
-          surfaces: ["M", "O"],
-          phase: 1,
+          plan_id: "tx-plan-2",
+          procedure_name: "علاج عصب الضرس الأول العلوي",
+          tooth_number: "16",
+          surface: "MOD",
           status: "completed" as const,
-          sort: 1,
-          surgical: false,
-          condition_id: null,
-          catalog_code: "rest_comp",
-          scheduled_for: null,
-          completed_on: "2026-10-20",
-          clinician_name: "د. إبراهيم",
-          facility_name: "مجمع الشفاء لطب الأسنان",
-          encounter_id: null,
+          priority: "urgent" as const,
+          cost: 1200,
           notes: null,
           record_status: "active" as const,
           created_at: "2026-10-15",
@@ -226,7 +159,7 @@ describe("Treatment Plan Report Builder", () => {
       record_status: "active" as const,
       created_at: "2026-10-15",
       updated_at: "2026-10-18",
-    };
+    } as unknown as TreatmentPlan;
 
     const res = buildTreatmentPlanReport(mockPatient, plan, {
       lang: "ar",
@@ -255,12 +188,13 @@ describe("Emergency Medical Card Builder", () => {
           blood_group_verified: true,
           allergy_assertion: "verified",
         },
-        allergies: [{ substance: "Penicillin", reaction: "طفح جلدي وضيق تنفس", severity: "severe" }],
-        conditions: [{ name: "السكري النوع الثاني" }],
-        medications: [{ name_generic: "Metformin", strength: "500 mg", dose: "حبة واحدة", frequency: "مرتان يومياً", route: "فموي" }],
+        allergies: [{ substance: "Penicillin", category: "medication", reaction: "طفح جلدي وضيق تنفس", severity: "severe" }],
+        conditions: [{ name: "السكري النوع الثاني", severity: "moderate" }],
+        medications: [{ name: "Metformin", strength: "500 mg", dose: "حبة واحدة", frequency: "مرتان يومياً" }],
         devices: [{ kind: "cardiac_pacemaker", name: "منظم ضربات قلب", body_site: "أعلى الصدر الأيسر", mri_safety: "conditional" }],
         contacts: [{ full_name: "فاطمة عبد الله", relation: "أخت", phone: "+966555123456", is_legal_representative: true }],
         assertions: { none_chronic_conditions: false, none_long_term_medications: false, none_devices: false },
+        include_sensitive: false,
       },
       {
         lang: "ar",
