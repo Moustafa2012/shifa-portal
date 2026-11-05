@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 const SCOPES: ReportScope[] = ["summary", "vitals", "labs", "full"];
 
-/** GET /api/patients/:pid/report?scope=summary|vitals|labs|full[&type=code&range=30|90|365|all&from=&to=][&dl=1]
+/** GET /api/patients/:pid/report?scope=summary|vitals|labs|full[&type=code&range=30|90|365|all&from=&to=][&dl=1][&lang=ar|en]
  *  A real vector PDF (selectable text, vector charts). Runs as the signed-in user, so RLS decides what is included. */
 export async function GET(request: NextRequest, { params }: { params: { pid: string } }) {
   if (!UUID_RE.test(params.pid)) return new NextResponse("Not found", { status: 404 });
@@ -29,7 +29,9 @@ export async function GET(request: NextRequest, { params }: { params: { pid: str
   const scope = (SCOPES as string[]).includes(q.get("scope") ?? "") ? (q.get("scope") as ReportScope) : "full";
   const typeCode = /^[a-z0-9_]+$/.test(q.get("type") ?? "") ? (q.get("type") as string) : undefined;
   const date = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
-  const { lang } = i18n();
+  const requestedLang = q.get("lang");
+  const lang: "ar" | "en" = requestedLang === "ar" || requestedLang === "en" ? requestedLang : i18n().lang;
+
   try {
     const { meta, blocks, filename } = await buildPatientReport(supabase, p as PatientRow, {
       lang, tz: getTz(), scope, typeCode, range: q.get("range") ?? undefined, from: date(q.get("from")), to: date(q.get("to")), types: await getObsTypes(),

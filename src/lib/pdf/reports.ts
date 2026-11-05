@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ageLabel, fmtDate, fmtDateTime, fmtPartialDate } from "@/lib/format";
 import {
-  ALLERGY_ASSERTION, ALLERGY_SEVERITY, CARE_PLAN_STATUS, CERTAINTY, CLINICAL_STATUS, CONDITION_CATEGORY, ENCOUNTER_KIND, FAMILY_RELATION,
+  ALLERGY_ASSERTION, ALLERGY_SEVERITY, ANESTHESIA_KIND, CARE_PLAN_STATUS, CERTAINTY, CLINICAL_STATUS, CONDITION_CATEGORY, DOC_TYPE, ENCOUNTER_KIND, FAMILY_RELATION,
   IMAGING_MODALITY, IMMUNIZATION_STATUS, INTERPRETATION, lbl, LAB_GROUP, MED_ORIGIN, PROCEDURE_KIND, SEX, SHARE_MODULES, type Opt,
 } from "@/lib/labels";
 import { buildSeries, inWindow, resolveWindow, stats } from "@/lib/clinical/series";
@@ -111,19 +111,49 @@ export async function buildPatientReport(supabase: SupabaseClient, p: PatientRow
   const wantSummary = o.scope === "summary" || o.scope === "full";
   const wantVitals = o.scope === "vitals" || o.scope === "full";
   const wantLabs = o.scope === "labs" || o.scope === "full";
+  const isFull = o.scope === "full";
 
   const win = o.scope === "vitals" ? (resolveWindow(o.range, o.from, o.to) ?? resolveWindow("90", undefined, undefined)!) : undefined;
   const needObs = wantVitals || wantLabs || wantSummary;
-  const [allergies, conditions, meds, contacts, obsRes, encs] = await Promise.all([
+  const [allergies, conditions, meds, contacts, obsRes, encs, procs, imgs, immus, plans, notes, fams, docs] = await Promise.all([
     wantSummary ? supabase.from("allergies").select("substance, severity, reaction, certainty").eq("patient_id", p.id).eq("status", "active").eq("record_status", "active").neq("certainty", "refuted") : { data: [] },
     wantSummary ? supabase.from("conditions").select("name, category, certainty, clinical_status, onset_date, date_precision").eq("patient_id", p.id).eq("record_status", "active").order("onset_date", { ascending: false, nullsFirst: false }).limit(60) : { data: [] },
     wantSummary ? supabase.from("medications").select("name_generic, name_brand, strength, dose, frequency, route, origin, indication, status").eq("patient_id", p.id).eq("record_status", "active").eq("status", "active") : { data: [] },
     wantSummary ? supabase.from("emergency_contacts").select("full_name, relation, phone, is_legal_representative").eq("patient_id", p.id) : { data: [] },
     needObs ? supabase.from("observations").select("*").eq("patient_id", p.id).in("status", ["final", "preliminary"]).order("effective_at", { ascending: false }).limit(5000) : { data: [] },
-    wantSummary ? supabase.from("encounters").select("kind, reason, started_at, practitioner_name, facility_name, assessment, summary").eq("patient_id", p.id).eq("record_status", "active").order("started_at", { ascending: false }).limit(12) : { data: [] },
+    wantSummary ? supabase.from("encounters").select("kind, reason, started_at, practitioner_name, facility_name, assessment, summary").eq("patient_id", p.id).eq("record_status", "active").order("started_at", { ascending: false }).limit(isFull ? 30 : 12) : { data: [] },
+    isFull ? supabase.from("procedures").select("name, kind, body_site, performed_on, date_precision, operator_name, indication, outcome").eq("patient_id", p.id).eq("record_status", "active").order("performed_on", { ascending: false, nullsFirst: false }).limit(30) : { data: [] },
+    isFull ? supabase.from("imaging").select("modality, body_site, performed_on, date_precision, findings, impression").eq("patient_id", p.id).eq("record_status", "active").order("performed_on", { ascending: false, nullsFirst: false }).limit(30) : { data: [] },
+    isFull ? supabase.from("immunizations").select("vaccine_name, dose_number, status, administered_on, date_precision").eq("patient_id", p.id).eq("record_status", "active").order("administered_on", { ascending: false, nullsFirst: false }).limit(30) : { data: [] },
+    isFull ? supabase.from("care_plans").select("title, status, goals, instructions").eq("patient_id", p.id).eq("record_status", "active").limit(20) : { data: [] },
+    isFull ? supabase.from("clinical_notes").select("title, body, noted_at, author_name").eq("patient_id", p.id).eq("record_status", "active").order("noted_at", { ascending: false }).limit(20) : { data: [] },
+    isFull ? supabase.from("family_history").select("relation, condition_name, age_at_onset").eq("patient_id", p.id).eq("record_status", "active").limit(25) : { data: [] },
+    isFull ? supabase.from("medical_documents").select("title, doc_type, document_date, original_filename").eq("patient_id", p.id).eq("record_status", "active").order("document_date", { ascending: false, nullsFirst: false }).limit(40) : { data: [] },
   ]);
   const obs = ((obsRes.data ?? []) as ObservationRow[]).filter((x) => byId.has(x.type_id));
   const rowsOf = (id: string) => obs.filter((x) => x.type_id === id);
+
+  // ---- Table of Contents / Index Block for Full Report
+  if (isFull) {
+    const tocItems: { label: string; count?: number | string; badge?: string }[] = [];
+    const alLen = (allergies.data ?? []).length;
+    tocItems.push({ label: t("معلومات السلامة والحساسية", "Safety & Allergies"), badge: alLen ? t(`${alLen} حساسية`, `${alLen} alerts`) : t("سليم", "Clear") });
+    tocItems.push({ label: t("الأمراض والتشخيصات", "Conditions & Diagnoses"), count: (conditions.data ?? []).length });
+    tocItems.push({ label: t("الأدوية الحالية", "Current Medications"), count: (meds.data ?? []).length });
+    const vitalsCount = types.filter((x) => x.category !== "lab" && rowsOf(x.id).length > 0).length;
+    const labsCount = types.filter((x) => x.category === "lab" && rowsOf(x.id).length > 0).length;
+    if (vitalsCount) tocItems.push({ label: t("القياسات الحيوية", "Vital Signs"), count: vitalsCount });
+    if (labsCount) tocItems.push({ label: t("التحاليل المخبرية", "Lab Results"), count: labsCount });
+    tocItems.push({ label: t("الزيارات السريرية", "Clinical Visits"), count: (encs.data ?? []).length });
+    if ((procs.data ?? []).length) tocItems.push({ label: t("العمليات والإجراءات", "Procedures & Surgeries"), count: (procs.data ?? []).length });
+    if ((imgs.data ?? []).length) tocItems.push({ label: t("الأشعة والتصوير", "Imaging & Radiology"), count: (imgs.data ?? []).length });
+    if ((immus.data ?? []).length) tocItems.push({ label: t("سجل التطعيمات", "Immunizations"), count: (immus.data ?? []).length });
+    if ((plans.data ?? []).length) tocItems.push({ label: t("خطط العلاج والمتابعة", "Care Plans"), count: (plans.data ?? []).length });
+    if ((notes.data ?? []).length) tocItems.push({ label: t("الملاحظات السريرية", "Clinical Notes"), count: (notes.data ?? []).length });
+    if ((fams.data ?? []).length) tocItems.push({ label: t("التاريخ العائلي", "Family History"), count: (fams.data ?? []).length });
+    if ((docs.data ?? []).length) tocItems.push({ label: t("أرشيف المستندات والتقارير", "Document Archive"), count: (docs.data ?? []).length });
+    blocks.push({ t: "toc", title: t("فهرس السجل الطبي الشامل", "Comprehensive Medical Record Index"), items: tocItems });
+  }
 
   if (wantSummary) {
     const al = (allergies.data ?? []) as R[];
@@ -209,18 +239,246 @@ export async function buildPatientReport(supabase: SupabaseClient, p: PatientRow
     }
   }
 
+  // ---- Additional Clinical Sections for Full Health Report
+  if (isFull) {
+    const ps = (procs.data ?? []) as R[];
+    if (ps.length) {
+      blocks.push({ t: "h", text: t("العمليات والإجراءات الطبية", "Procedures & surgeries") });
+      blocks.push({
+        t: "table",
+        cols: [{ label: t("الإجراء", "Procedure"), w: 4 }, { label: t("النوع / الموضع", "Kind / site"), w: 3 }, { label: t("المنفّذ", "Operator"), w: 2.5 }, { label: t("النتيجة", "Outcome"), w: 2.5 }, { label: t("التاريخ", "Date"), w: 2 }],
+        rows: ps.map((x) => [{ text: s(x.name), bold: true }, [lbl(PROCEDURE_KIND, s(x.kind), lang), s(x.body_site)].filter(Boolean).join(" · "), s(x.operator_name), s(x.outcome) || s(x.indication), d(x.performed_on, x.date_precision)]),
+      });
+    }
+
+    const ims = (imgs.data ?? []) as R[];
+    if (ims.length) {
+      blocks.push({ t: "h", text: t("الأشعة والتصوير الطبي", "Diagnostic imaging & radiology") });
+      blocks.push({
+        t: "table",
+        cols: [{ label: t("النوع / الموضع", "Modality / site"), w: 3.5 }, { label: t("الموجودات", "Findings"), w: 4.5 }, { label: t("الخلاصة", "Impression"), w: 3.5 }, { label: t("التاريخ", "Date"), w: 2.5 }],
+        rows: ims.map((x) => [{ text: `${lbl(IMAGING_MODALITY, s(x.modality), lang)}${x.body_site ? ` — ${s(x.body_site)}` : ""}`, bold: true }, s(x.findings), s(x.impression), d(x.performed_on, x.date_precision)]),
+      });
+    }
+
+    const imu = (immus.data ?? []) as R[];
+    if (imu.length) {
+      blocks.push({ t: "h", text: t("سجل اللقاحات والتطعيمات", "Immunizations") });
+      blocks.push({
+        t: "table",
+        cols: [{ label: t("اللقاح", "Vaccine"), w: 5 }, { label: t("الجرعة", "Dose"), w: 2 }, { label: t("الحالة", "Status"), w: 2.5 }, { label: t("تاريخ الإعطاء", "Date"), w: 2.5 }],
+        rows: imu.map((x) => [{ text: s(x.vaccine_name), bold: true }, x.dose_number ? `#${s(x.dose_number)}` : "—", { text: lbl(IMMUNIZATION_STATUS, s(x.status), lang), tone: s(x.status) === "completed" ? "ok" : "muted" }, d(x.administered_on, x.date_precision)]),
+      });
+    }
+
+    const cp = (plans.data ?? []) as R[];
+    if (cp.length) {
+      blocks.push({ t: "h", text: t("خطط العلاج والمتابعة", "Care plans") });
+      blocks.push({
+        t: "table",
+        cols: [{ label: t("الخطة", "Plan title"), w: 4 }, { label: t("الحالة", "Status"), w: 2 }, { label: t("الأهداف", "Goals"), w: 4 }, { label: t("التعليمات", "Instructions"), w: 4 }],
+        rows: cp.map((x) => [{ text: s(x.title), bold: true }, { text: lbl(CARE_PLAN_STATUS, s(x.status), lang), tone: s(x.status) === "active" ? "ok" : "muted" }, s(x.goals), s(x.instructions)]),
+      });
+    }
+
+    const ns = (notes.data ?? []) as R[];
+    if (ns.length) {
+      blocks.push({ t: "h", text: t("الملاحظات السريرية", "Clinical notes") });
+      for (const n of ns) {
+        blocks.push({ t: "p", text: `${dt(n.noted_at)} — ${s(n.title)}${n.author_name ? ` · ${s(n.author_name)}` : ""}` });
+        if (n.body) blocks.push({ t: "p", muted: true, text: s(n.body) });
+      }
+    }
+
+    const fh = (fams.data ?? []) as R[];
+    if (fh.length) {
+      blocks.push({ t: "h", text: t("التاريخ المرضي العائلي", "Family medical history") });
+      blocks.push({
+        t: "table",
+        cols: [{ label: t("صلة القرابة", "Relation"), w: 3 }, { label: t("الحالة المرضية", "Condition"), w: 6 }, { label: t("عمر البداية", "Onset age"), w: 3 }],
+        rows: fh.map((x) => [lbl(FAMILY_RELATION, s(x.relation), lang), { text: s(x.condition_name), bold: true }, s(x.age_at_onset) || "—"]),
+      });
+    }
+
+    const dc = (docs.data ?? []) as R[];
+    if (dc.length) {
+      blocks.push({ t: "h", text: t("فهرس المستندات والتقارير المرفقة", "Attached documents archive index") });
+      blocks.push({
+        t: "table",
+        cols: [{ label: t("عنوان المستند", "Document title"), w: 5 }, { label: t("النوع", "Type"), w: 3 }, { label: t("اسم الملف", "Filename"), w: 3.5 }, { label: t("التاريخ", "Date"), w: 2.5 }],
+        rows: dc.map((x) => [{ text: s(x.title), bold: true }, lbl(DOC_TYPE, s(x.doc_type), lang), s(x.original_filename), d(x.document_date)]),
+      });
+    }
+  }
+
   const titleBy: Record<ReportScope, string> = {
     summary: t("الملخص الصحي", "Health summary"), vitals: t("تقرير القياسات الحيوية", "Vital signs report"),
     labs: t("تقرير التحاليل المخبرية", "Lab results report"), full: t("التقرير الصحي الكامل", "Complete health report"),
   };
   const name = lang === "en" && p.full_name_en ? p.full_name_en : p.full_name;
+  const docRef = `${p.mrn}-${o.scope.toUpperCase()}-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`;
   return {
     meta: {
-      lang, title: titleBy[o.scope], brand: t("بوابة شفاء", "Shifa Portal"),
+      lang, title: titleBy[o.scope], brand: t("بوابة شفاء", "Shifa Portal"), docRef,
       headline: { name, lines: identityLines(lang, tz, { mrn: p.mrn, date_of_birth: p.date_of_birth, sex: p.sex, nationality: p.nationality, blood: p.blood_abo ? `${p.blood_abo}${p.blood_rh ?? ""}` : null, verified: p.blood_group_verified, phone: p.phone }) },
       generatedAt: `${t("أُنشئ في", "Generated")} ${fmtDateTime(new Date(), lang, tz)}`, footerNote: SAFETY_NOTE(lang),
     },
     blocks, filename: `${p.mrn}-${o.scope}${o.scope === "vitals" && o.typeCode ? `-${o.typeCode}` : ""}.pdf`,
+  };
+}
+
+// ------------------------------------------------------------------------------------------------ a clinical encounter / visit report
+export function buildEncounterReport(
+  p: PatientRow,
+  e: Record<string, unknown>,
+  o: {
+    lang: Lang;
+    tz: string;
+    specialtyName?: string | null;
+    conditions?: { name: string; clinical_status?: string }[];
+    medications?: { name_generic?: string; name_brand?: string; dose?: string; frequency?: string; route?: string }[];
+    procedures?: { name: string; kind?: string; outcome?: string }[];
+    observations?: ObservationRow[];
+    types?: ObservationType[];
+  }
+): { meta: ReportMeta; blocks: Block[]; filename: string } {
+  const { lang, tz } = o;
+  const t = tx(lang);
+  const dt = (v: unknown) => fmtDateTime(s(v), lang, tz);
+  const d = (v: unknown) => fmtDate(s(v), lang, tz);
+  const blocks: Block[] = [];
+
+  // Visit details
+  blocks.push({ t: "h", text: t("بيانات الزيارة", "Encounter details") });
+  const kind = lbl(ENCOUNTER_KIND, s(e.kind), lang);
+  blocks.push({
+    t: "kv",
+    rows: ([
+      [t("النوع والسبب", "Type & Reason"), `${kind}${e.reason ? ` — ${s(e.reason)}` : ""}`],
+      [t("التاريخ والوقت", "Date & Time"), dt(e.started_at)],
+      [t("الطبيب المعالج", "Practitioner"), s(e.practitioner_name)],
+      [t("المنشأة الصحية", "Facility"), s(e.facility_name)],
+      [t("القسم / التخصص", "Specialty"), o.specialtyName ?? ""],
+    ] as [string, string][]).filter(([, v]) => Boolean(v)),
+  });
+
+  // Clinical presentation
+  const clinicalRows: [string, string][] = ([
+    [t("الأعراض والشكوى", "Symptoms & Complaint"), s(e.symptoms)],
+    [t("التاريخ المرضي للحالة", "History of Illness"), s(e.history_of_present_illness)],
+    [t("الفحص السريري", "Clinical Examination"), s(e.examination)],
+    [t("التقييم والتشخيص", "Assessment"), s(e.assessment)],
+    [t("الخطة العلاجية", "Plan"), s(e.plan)],
+    [t("ملخص الزيارة", "Summary"), s(e.summary)],
+    [t("ملخص الخروج", "Discharge Summary"), s(e.discharge_summary)],
+  ] as [string, string][]).filter(([, v]) => Boolean(v));
+  if (clinicalRows.length) {
+    blocks.push({ t: "h", text: t("التقييم السريري", "Clinical evaluation") });
+    blocks.push({ t: "kv", rows: clinicalRows });
+  }
+
+  // Dental specific fields if present
+  const dentalRows: [string, string][] = ([
+    [t("الأسنان المعالجة", "Teeth"), Array.isArray(e.teeth) && e.teeth.length ? (e.teeth as number[]).join(", ") : ""],
+    [t("نوع التخدير", "Anaesthesia"), e.anesthesia_kind ? lbl(ANESTHESIA_KIND, s(e.anesthesia_kind), lang) : ""],
+    [t("المادة المخدرة", "Anaesthetic"), s(e.anesthetic)],
+    [t("المواد المستخدمة", "Materials"), s(e.materials)],
+    [t("المضاعفات", "Complications"), s(e.complications)],
+  ] as [string, string][]).filter(([, v]) => Boolean(v));
+  if (dentalRows.length) {
+    blocks.push({ t: "h", text: t("إجراءات الأسنان", "Dental specifics") });
+    blocks.push({ t: "kv", rows: dentalRows });
+  }
+
+  // Diagnoses made at this visit
+  if (o.conditions?.length) {
+    blocks.push({ t: "h", text: t("التشخيصات المسجلة في هذه الزيارة", "Diagnoses recorded") });
+    blocks.push({
+      t: "table",
+      cols: [{ label: t("التشخيص", "Diagnosis"), w: 6 }, { label: t("الحالة", "Status"), w: 4 }],
+      rows: o.conditions.map((c) => [{ text: c.name, bold: true }, lbl(CLINICAL_STATUS, s(c.clinical_status), lang)]),
+    });
+  }
+
+  // Medications prescribed
+  if (o.medications?.length) {
+    blocks.push({ t: "h", text: t("الأدوية الموصوفة", "Medications prescribed") });
+    blocks.push({
+      t: "table",
+      cols: [{ label: t("الدواء", "Medicine"), w: 5 }, { label: t("الجرعة والاستخدام", "Dosage & directions"), w: 5 }],
+      rows: o.medications.map((m) => [
+        { text: [m.name_generic, m.name_brand ? `(${m.name_brand})` : ""].filter(Boolean).join(" "), bold: true },
+        [m.dose, m.frequency, m.route].filter(Boolean).join(" · "),
+      ]),
+    });
+  }
+
+  // Procedures performed
+  if (o.procedures?.length) {
+    blocks.push({ t: "h", text: t("الإجراءات المنفذة", "Procedures performed") });
+    blocks.push({
+      t: "table",
+      cols: [{ label: t("الإجراء", "Procedure"), w: 5 }, { label: t("النوع / النتيجة", "Kind / outcome"), w: 5 }],
+      rows: o.procedures.map((proc) => [
+        { text: proc.name, bold: true },
+        [lbl(PROCEDURE_KIND, s(proc.kind), lang), proc.outcome].filter(Boolean).join(" — "),
+      ]),
+    });
+  }
+
+  // Linked measurements & lab observations
+  if (o.observations?.length && o.types?.length) {
+    const typeMap = new Map(o.types.map((t) => [t.id, t]));
+    blocks.push({ t: "h", text: t("القياسات والنتائج المسجلة", "Recorded measurements") });
+    blocks.push({
+      t: "table",
+      cols: [{ label: t("القياس", "Measure"), w: 4 }, { label: t("القيمة", "Value"), w: 3 }, { label: t("التصنيف", "Flag"), w: 3 }],
+      rows: o.observations.map((obs) => {
+        const ty = typeMap.get(obs.type_id);
+        const name = ty ? (lang === "ar" ? ty.name_ar : ty.name_en) : t("قياس", "Measure");
+        const val = `${valueOf({ ...obs, value_kind: ty?.value_kind })} ${s(obs.unit)}`.trim();
+        return [{ text: name, bold: true }, val, interpCell(obs.interpretation, lang)];
+      }),
+    });
+  }
+
+  // Instructions & Follow-up
+  const followRows: [string, string][] = ([
+    [t("تعليمات المريض", "Patient instructions"), s(e.instructions)],
+    [t("موعد المتابعة القادم", "Next follow-up"), e.follow_up_date ? d(e.follow_up_date) : ""],
+  ] as [string, string][]).filter(([, v]) => Boolean(v));
+  if (followRows.length) {
+    blocks.push({ t: "h", text: t("التعليمات والمتابعة", "Instructions & follow-up") });
+    blocks.push({ t: "kv", rows: followRows });
+  }
+
+  // Signoff block
+  blocks.push({ t: "space", h: 10 });
+  const line = "____________________";
+  blocks.push({
+    t: "table",
+    cols: [{ label: "", w: 3 }, { label: t("الاسم والترخيص", "Practitioner & License"), w: 4 }, { label: t("التوقيع", "Signature"), w: 4 }, { label: t("التاريخ", "Date"), w: 3 }],
+    rows: [
+      [{ text: t("الطبيب المعالج", "Treating clinician"), bold: true }, s(e.practitioner_name) || line, line, d(e.started_at)],
+    ],
+  });
+
+  const name = lang === "en" && p.full_name_en ? p.full_name_en : p.full_name;
+  const visitDate = s(e.started_at).slice(0, 10);
+  const docRef = `${p.mrn}-ENC-${visitDate.replace(/-/g, "")}`;
+  return {
+    meta: {
+      lang,
+      title: t("تقرير زيارة سريرية", "Clinical Encounter Note"),
+      subtitle: `${kind}${e.reason ? ` — ${s(e.reason)}` : ""}`,
+      brand: t("بوابة شفاء", "Shifa Portal"),
+      docRef,
+      headline: { name, lines: identityLines(lang, tz, { mrn: p.mrn, date_of_birth: p.date_of_birth, sex: p.sex, nationality: p.nationality, blood: p.blood_abo ? `${p.blood_abo}${p.blood_rh ?? ""}` : null, verified: p.blood_group_verified, phone: p.phone }) },
+      generatedAt: `${t("أُنشئ في", "Generated")} ${fmtDateTime(new Date(), lang, tz)}`,
+      footerNote: SAFETY_NOTE(lang),
+    },
+    blocks,
+    filename: `${p.mrn}-visit-${visitDate}-${s(e.id).slice(0, 8)}.pdf`,
   };
 }
 
@@ -328,9 +586,10 @@ export function buildShareReport(b: Bundle, o: { lang: Lang; tz: string; ctx?: (
   }
 
   const p = b.patient;
+  const docRef = `${p.mrn}-SHARE-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}`;
   return {
     meta: {
-      lang, title: t("ملف طبي مشارك", "Shared medical file"), subtitle: b.meta.title, brand: t("بوابة شفاء", "Shifa Portal"),
+      lang, title: t("ملف طبي مشارك", "Shared medical file"), subtitle: b.meta.title, brand: t("بوابة شفاء", "Shifa Portal"), docRef,
       headline: { name: lang === "en" && p.full_name_en ? p.full_name_en : p.full_name, lines: identityLines(lang, tz, { mrn: p.mrn, date_of_birth: p.date_of_birth, sex: p.sex, nationality: p.nationality, blood: p.blood_group, verified: p.blood_group_verified, phone: p.phone ?? null }) },
       generatedAt: `${t("أُنشئ في", "Generated")} ${dt(b.meta.generated_at)} · ${t("تنتهي المشاركة", "share expires")} ${dt(b.meta.expires_at)}`,
       footerNote: t("هذا عرض لمعلومات سجّلها المريض أو مقدمو الرعاية؛ قد لا يكون كاملاً. القرار السريري لك. ", "A view of information recorded by the patient or care providers; it may be incomplete. Clinical judgement is yours. ") + SAFETY_NOTE(lang),
@@ -405,9 +664,10 @@ export function buildTreatmentPlanReport(p: PatientRow, plan: TreatmentPlan, o: 
     [{ text: t("شاهد (اختياري)", "Witness (optional)"), bold: true }, line, line, line],
   ] });
   const name = lang === "en" && p.full_name_en ? p.full_name_en : p.full_name;
+  const docRef = `${p.mrn}-TXP-V${plan.version}`;
   return {
     meta: {
-      lang, title: t("خطة علاج الأسنان", "Dental treatment plan"), subtitle: plan.title, brand: t("بوابة شفاء", "Shifa Portal"),
+      lang, title: t("خطة علاج الأسنان", "Dental treatment plan"), subtitle: plan.title, brand: t("بوابة شفاء", "Shifa Portal"), docRef,
       headline: { name, lines: identityLines(lang, tz, { mrn: p.mrn, date_of_birth: p.date_of_birth, sex: p.sex, nationality: p.nationality, blood: p.blood_abo ? `${p.blood_abo}${p.blood_rh ?? ""}` : null, verified: p.blood_group_verified, phone: p.phone }) },
       generatedAt: `${t("أُنشئ في", "Generated")} ${fmtDateTime(new Date(), lang, tz)}`, footerNote: SAFETY_NOTE(lang),
     },
@@ -507,9 +767,10 @@ export function buildPerioReport(p: PatientRow, exam: PerioExam, o: { lang: Lang
     }
   }
   const name = lang === "en" && p.full_name_en ? p.full_name_en : p.full_name;
+  const docRef = `${p.mrn}-PERIO-${(exam.exam_date ?? "").replace(/-/g, "")}`;
   return {
     meta: {
-      lang, title: t("مخطط اللثة", "Periodontal chart"), subtitle: day(exam.exam_date), brand: t("بوابة شفاء", "Shifa Portal"),
+      lang, title: t("مخطط اللثة", "Periodontal chart"), subtitle: day(exam.exam_date), brand: t("بوابة شفاء", "Shifa Portal"), docRef,
       headline: { name, lines: identityLines(lang, tz, { mrn: p.mrn, date_of_birth: p.date_of_birth, sex: p.sex, nationality: p.nationality, blood: p.blood_abo ? `${p.blood_abo}${p.blood_rh ?? ""}` : null, verified: p.blood_group_verified, phone: p.phone }) },
       generatedAt: `${t("أُنشئ في", "Generated")} ${fmtDateTime(new Date(), lang, tz)}`, footerNote: SAFETY_NOTE(lang),
     },

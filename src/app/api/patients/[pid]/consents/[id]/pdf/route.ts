@@ -13,7 +13,7 @@ import type { PatientRow } from "@/lib/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET /api/patients/:pid/consents/:id/pdf[?dl=1] — the consent as signed, with the drawn signature (RLS decides access). */
+/** GET /api/patients/:pid/consents/:id/pdf[?dl=1][&lang=ar|en] — the consent as signed, with the drawn signature (RLS decides access). */
 export async function GET(request: NextRequest, { params }: { params: { pid: string; id: string } }) {
   if (!UUID_RE.test(params.pid) || !UUID_RE.test(params.id)) return new NextResponse("Not found", { status: 404 });
   if (!(await currentUser())) return new NextResponse("Unauthorized", { status: 401 });
@@ -23,7 +23,9 @@ export async function GET(request: NextRequest, { params }: { params: { pid: str
     supabase.from("consents").select("*").eq("id", params.id).eq("patient_id", params.pid).eq("record_status", "active").maybeSingle(),
   ]);
   if (!p || !c) return new NextResponse("Not found", { status: 404 });
-  const { lang } = i18n();
+  const q = request.nextUrl.searchParams;
+  const requestedLang = q.get("lang");
+  const lang: "ar" | "en" = requestedLang === "ar" || requestedLang === "en" ? requestedLang : i18n().lang;
   try {
     // the signature is read through the server (the bucket is private); the path was already authorised by the row above
     const { data: file } = await createAdminClient().storage.from(BUCKET).download(String(c.signature_path));
@@ -37,7 +39,7 @@ export async function GET(request: NextRequest, { params }: { params: { pid: str
       covers = pl?.title ?? null;
     }
     const { meta, blocks, filename } = buildConsentReport(patientFromRow(p as PatientRow), c as unknown as ConsentRow & { body: string }, { lang, tz: getTz(), signature, covers });
-    return await pdfResponse(meta, blocks, filename, {}, request.nextUrl.searchParams.get("dl") === "1");
+    return await pdfResponse(meta, blocks, filename, {}, q.get("dl") === "1");
   } catch (e) {
     console.error("[pdf-error]", String((e as Error)?.message ?? e).slice(0, 300));
     return new NextResponse("Could not create the PDF", { status: 500 });

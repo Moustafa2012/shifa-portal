@@ -11,7 +11,7 @@ import type { PerioExam, PerioTooth } from "@/lib/perio";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET /api/patients/:pid/perio/:id/pdf[?dl=1] — one periodontal chart, with the change since the final chart before it (RLS decides access). */
+/** GET /api/patients/:pid/perio/:id/pdf[?dl=1][&lang=ar|en] — one periodontal chart, with the change since the final chart before it (RLS decides access). */
 export async function GET(request: NextRequest, { params }: { params: { pid: string; id: string } }) {
   if (!UUID_RE.test(params.pid) || !UUID_RE.test(params.id)) return new NextResponse("Not found", { status: 404 });
   if (!(await currentUser())) return new NextResponse("Unauthorized", { status: 401 });
@@ -26,10 +26,12 @@ export async function GET(request: NextRequest, { params }: { params: { pid: str
   const ids = [exam.id as string, ...(prev ? [prev.id as string] : [])];
   const { data: teeth } = await supabase.from("perio_teeth").select("*").eq("patient_id", params.pid).in("exam_id", ids);
   const withTeeth = (e: Record<string, unknown>) => ({ ...e, teeth: ((teeth ?? []) as (PerioTooth & { exam_id: string })[]).filter((x) => x.exam_id === e.id) }) as unknown as PerioExam;
-  const { lang } = i18n();
+  const q = request.nextUrl.searchParams;
+  const requestedLang = q.get("lang");
+  const lang: "ar" | "en" = requestedLang === "ar" || requestedLang === "en" ? requestedLang : i18n().lang;
   try {
     const { meta, blocks, filename } = buildPerioReport(p as PatientRow, withTeeth(exam), { lang, tz: getTz(), previous: prev ? withTeeth(prev) : null });
-    return await pdfResponse(meta, blocks, filename, {}, request.nextUrl.searchParams.get("dl") === "1");
+    return await pdfResponse(meta, blocks, filename, {}, q.get("dl") === "1");
   } catch (e) {
     console.error("[pdf-error]", String((e as Error)?.message ?? e).slice(0, 300));
     return new NextResponse("Could not create the PDF", { status: 500 });

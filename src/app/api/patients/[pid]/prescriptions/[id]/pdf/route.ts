@@ -14,7 +14,7 @@ import type { PatientRow } from "@/lib/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET /api/patients/:pid/prescriptions/:id/pdf[?dl=1] — a printable prescription (RLS decides access). */
+/** GET /api/patients/:pid/prescriptions/:id/pdf[?dl=1][&lang=ar|en] — a printable prescription (RLS decides access). */
 export async function GET(request: NextRequest, { params }: { params: { pid: string; id: string } }) {
   if (!UUID_RE.test(params.pid) || !UUID_RE.test(params.id)) return new NextResponse("Not found", { status: 404 });
   if (!(await currentUser())) return new NextResponse("Unauthorized", { status: 401 });
@@ -25,7 +25,9 @@ export async function GET(request: NextRequest, { params }: { params: { pid: str
     supabase.from("medications").select("*").eq("prescription_id", params.id).eq("patient_id", params.pid).eq("record_status", "active").order("recorded_at"),
   ]);
   if (!p || !rx) return new NextResponse("Not found", { status: 404 });
-  const { lang } = i18n();
+  const q = request.nextUrl.searchParams;
+  const requestedLang = q.get("lang");
+  const lang: "ar" | "en" = requestedLang === "ar" || requestedLang === "en" ? requestedLang : i18n().lang;
   try {
     const [ctx, rules, facts] = await Promise.all([getClinicalContext(params.pid), getSafetyRules(), getSafetyFacts(params.pid)]);
     const [one] = groupPrescriptions([rx as Record<string, unknown>], (meds ?? []) as Record<string, unknown>[]);
@@ -34,7 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: { pid: str
     const { meta, blocks, filename } = buildPrescriptionReport(patientFromRow(p as PatientRow), one, {
       lang, tz: getTz(), allergies: ctx.allergies.map((a) => a.substance), alerts,
     });
-    return await pdfResponse(meta, blocks, filename, {}, request.nextUrl.searchParams.get("dl") === "1");
+    return await pdfResponse(meta, blocks, filename, {}, q.get("dl") === "1");
   } catch (e) {
     console.error("[pdf-error]", String((e as Error)?.message ?? e).slice(0, 300));
     return new NextResponse("Could not create the PDF", { status: 500 });

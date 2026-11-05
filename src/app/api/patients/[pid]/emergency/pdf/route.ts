@@ -25,7 +25,8 @@ async function render(request: NextRequest, pid: string, token: string | null) {
     if (ok === true) link = emergencyLink(process.env.NEXT_PUBLIC_SITE_URL ? siteUrl() : request.headers.get("origin") ?? request.nextUrl.origin, token);
   }
   try {
-    const { lang } = i18n();
+    const requestedLang = request.nextUrl.searchParams.get("lang");
+    const lang: "ar" | "en" = requestedLang === "ar" || requestedLang === "en" ? requestedLang : i18n().lang;
     const { meta, blocks, filename } = buildEmergencyReport(card, { lang, tz: getTz(), link, mrn: p.mrn as string });
     return await pdfResponse(meta, blocks, filename, {}, request.nextUrl.searchParams.get("dl") === "1");
   } catch (e) {

@@ -68,9 +68,10 @@ export function buildEmergencyReport(card: EmergencyCard, o: { lang: Lang; tz: s
   }
 
   const name = lang === "en" && p.full_name_en ? p.full_name_en : p.full_name;
+  const docRef = `${(o.mrn ?? "EMRG").toUpperCase()}-ICE-CARD`;
   return {
     meta: {
-      lang, title: t("بطاقة الطوارئ الطبية", "Medical emergency card"), brand: t("بوابة شفاء", "Shifa Portal"),
+      lang, title: t("بطاقة الطوارئ الطبية", "Medical emergency card"), brand: t("بوابة شفاء", "Shifa Portal"), docRef,
       headline: { name, lines: [[ageLabel(p.date_of_birth, lang), lbl(SEX, p.sex, lang), `${t("الميلاد", "DOB")} ${fmtDate(p.date_of_birth, lang, tz)}`, o.mrn].filter(Boolean).join("  ·  "),
         blood ? `${t("فصيلة الدم", "Blood group")}: ${blood}` : t("فصيلة الدم غير مسجلة", "Blood group not recorded")] },
       generatedAt: `${t("أُنشئت في", "Generated")} ${fmtDateTime(new Date(), lang, tz)}`,
@@ -79,5 +80,3 @@ export function buildEmergencyReport(card: EmergencyCard, o: { lang: Lang; tz: s
     blocks, filename: `emergency-card-${(o.mrn ?? "file").replace(/[^A-Za-z0-9-]/g, "")}.pdf`,
   };
 }
-
-

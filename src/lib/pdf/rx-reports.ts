@@ -102,9 +102,11 @@ export function buildPrescriptionReport(p: PdfPatient, rx: Rx, o: {
   blocks.push({ t: "table", cols: [{ label: "", w: 3 }, { label: t("الاسم", "Name"), w: 4 }, { label: t("التوقيع والختم", "Signature and stamp"), w: 5 }, { label: t("التاريخ", "Date"), w: 3 }], rows: [
     [{ text: t("الطبيب الواصف", "Prescriber"), bold: true }, rx.prescriber_name, line, day(rx.issued_on)],
   ] });
+  const docRef = `${p.mrn}-RX-${(rx.issued_on ?? "").replace(/-/g, "")}-${rx.id.slice(0, 8).toUpperCase()}`;
   return {
     meta: {
       lang, title: t("وصفة طبية", "Prescription"), subtitle: rx.prescriber_name, brand: t("بوابة شفاء", "Shifa Portal"), headline: headline(p, lang, tz),
+      docRef,
       generatedAt: `${t("أُنشئ في", "Generated")} ${fmtDateTime(new Date(), lang, tz)}`,
       footerNote: o.byShare
         ? t("وصفة سجّلها الطبيب عبر رابط المشاركة. الصرف والمتابعة بإشراف الطبيب والصيدلي.", "A prescription recorded by the doctor through the share link. Dispensing and follow-up are under the doctor and the pharmacist.")
@@ -144,9 +146,11 @@ export function buildConsentReport(p: PdfPatient, c: ConsentRow & { body: string
   ] as [string, string][]).filter(([, v]) => v) });
   if (o.signature) blocks.push({ t: "image", data: o.signature, w: 230, h: 90, caption: t("التوقيع المرسوم على الشاشة", "Signature drawn on the screen") });
   else blocks.push({ t: "p", muted: true, text: t("صورة التوقيع غير متاحة.", "The signature image is not available.") });
+  const docRef = `${p.mrn}-CONSENT-V${c.version}-${c.id.slice(0, 8).toUpperCase()}`;
   return {
     meta: {
       lang, title: t("موافقة موقّعة", "Signed consent"), subtitle: c.title, brand: t("بوابة شفاء", "Shifa Portal"), headline: headline(p, lang, tz),
+      docRef,
       generatedAt: `${t("أُنشئ في", "Generated")} ${fmtDateTime(new Date(), lang, tz)}`, footerNote: NOTE(lang),
     },
     blocks, filename: `${p.mrn}-consent-v${c.version}-${c.id.slice(0, 8)}.pdf`,

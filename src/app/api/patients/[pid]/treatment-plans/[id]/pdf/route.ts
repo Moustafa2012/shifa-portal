@@ -16,7 +16,7 @@ import type { TreatmentCost, TreatmentItem, TreatmentPlan } from "@/lib/treatmen
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** GET /api/patients/:pid/treatment-plans/:id/pdf[?costs=1][&dl=1] — the plan with its consent section (RLS decides access). */
+/** GET /api/patients/:pid/treatment-plans/:id/pdf[?costs=1][&dl=1][&lang=ar|en] — the plan with its consent section (RLS decides access). */
 export async function GET(request: NextRequest, { params }: { params: { pid: string; id: string } }) {
   if (!UUID_RE.test(params.pid) || !UUID_RE.test(params.id)) return new NextResponse("Not found", { status: 404 });
   if (!(await currentUser())) return new NextResponse("Unauthorized", { status: 401 });
@@ -33,7 +33,8 @@ export async function GET(request: NextRequest, { params }: { params: { pid: str
   const { data: costs } = withCosts
     ? await supabase.from("treatment_costs").select("*").eq("patient_id", params.pid).eq("record_status", "active").in("item_id", (items ?? []).map((i) => i.id as string))
     : { data: null };
-  const { lang } = i18n();
+  const requestedLang = q.get("lang");
+  const lang: "ar" | "en" = requestedLang === "ar" || requestedLang === "en" ? requestedLang : i18n().lang;
   try {
     const ctx = await getClinicalContext(params.pid);
     // safety alerts: the reviewable rules against the file and this plan's treatments that are still to happen

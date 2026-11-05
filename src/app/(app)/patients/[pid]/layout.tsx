@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TriangleAlert, ShieldCheck, CircleHelp, Printer } from "lucide-react";
+import { TriangleAlert, ShieldCheck, CircleHelp, Printer, Download } from "lucide-react";
 import { i18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess, getPatient, getSpecialties, getSpecialtyUsage } from "@/lib/data";
@@ -51,11 +51,14 @@ export default async function PatientLayout({ children, params }: { children: Re
     item("visits", t("الزيارات", "Visits")), item("procedures", t("العمليات والإجراءات", "Procedures")), item("imaging", t("الأشعة والتصوير", "Imaging")),
     item("appointments", t("المواعيد", "Appointments")), item("notes", t("الملاحظات", "Notes")), item("immunizations", t("التطعيمات", "Immunizations")),
     item("family-history", t("التاريخ العائلي", "Family history"))];
-  const docs = [item("documents", t("المستندات والتقارير", "Documents")),
+  const docs = [
+    item("reports", t("مركز وفهرس التقارير", "Reports center & index")),
+    item("documents", t("المستندات المرفقة", "Attached documents")),
     ...(access.canShare ? [item("sharing", t("المشاركة مع طبيب", "Share with a doctor"))] : []),
     item("emergency", t("بطاقة الطوارئ", "Emergency card")),
     ...(access.canManage ? [item("members", t("الأعضاء والدعوات", "Members & invitations"))] : []),
-    ...(access.canManage ? [item("audit", t("سجل التغييرات", "Change history"))] : [])];
+    ...(access.canManage ? [item("audit", t("سجل التغييرات", "Change history"))] : [])
+  ];
   const nav: ShellNav = {
     home: { href: "/patients", label: t("كل المرضى", "All patients") },
     products: [
@@ -84,7 +87,7 @@ export default async function PatientLayout({ children, params }: { children: Re
         ] } },
       { key: "records", label: t("السجلات", "Records"), icon: "records", href: P("conditions"), match: records.map((x) => x.href), group: 2,
         menu: { title: t("السجلات", "Records"), groups: [{ items: records }] } },
-      { key: "docs", label: t("المستندات والمشاركة", "Documents & sharing"), icon: "docs", href: P("documents"), group: 3, match: [...docs.map((x) => x.href), P("delete")],
+      { key: "docs", label: t("المستندات والمشاركة", "Documents & sharing"), icon: "docs", href: P("reports"), group: 3, match: [...docs.map((x) => x.href), P("documents"), P("delete")],
         menu: { title: t("المستندات والمشاركة", "Documents & sharing"), groups: [{ items: docs }] } },
     ],
     footer: globalNav(admin, t).footer,
@@ -110,8 +113,9 @@ export default async function PatientLayout({ children, params }: { children: Re
             </p>
           </div>
           </div>
-          <div className="row">
-            <a className="btn sm" href={`/api/patients/${p.id}/report?scope=full`} target="_blank" rel="noopener"><Printer size={14} aria-hidden="true" />{t("تقرير PDF", "PDF report")}</a>
+          <div className="row" style={{ gap: ".4rem" }}>
+            <Link className="btn sm" href={`${base}/reports`}><Printer size={14} aria-hidden="true" />{t("التقارير الطبية", "PDF reports")}</Link>
+            <a className="btn ghost sm" href={`/api/patients/${p.id}/report?scope=full`} target="_blank" rel="noopener" title={t("طباعة فورية للملف الكامل", "Print full dossier")}><Download size={14} aria-hidden="true" /></a>
             {p.blood_abo ? <Chip tone="info" title={p.blood_group_verified ? t("موثقة", "Verified") : t("غير موثقة", "Unverified")}>{t("الدم", "Blood")}: <span className="ltr">{p.blood_abo}{p.blood_rh ?? ""}</span>{p.blood_group_verified ? "" : " *"}</Chip> : <Chip tone="muted">{t("فصيلة الدم غير مسجلة", "Blood group not recorded")}</Chip>}
           </div>
         </div>

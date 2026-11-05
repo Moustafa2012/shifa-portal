@@ -105,9 +105,11 @@ export function buildDentalSummaryReport(p: PdfPatient, s: DentalSummary, o: { l
     [t("التكرار", "Repeats"), t(`كل ${s.recall.interval_months} أشهر`, `every ${s.recall.interval_months} months`)],
   ]);
 
+  const docRef = `${p.mrn}-DENTAL-SUMMARY`;
   return {
     meta: {
       lang, title: t("ملخص الأسنان", "Dental summary"), subtitle: o.byShare ? (o.clinician ?? undefined) : undefined, brand: t("بوابة شفاء", "Shifa Portal"), headline: headline(p, lang, tz),
+      docRef,
       generatedAt: `${t("أُنشئ في", "Generated")} ${fmtDateTime(new Date(), lang, tz)}`,
       footerNote: o.byShare
         ? t("ملخص من الملف السني ضمن نطاق رابط المشاركة. أداة لتنظيم المعلومات؛ لا تقدّم تشخيصاً ولا علاجاً.", "A summary of the dental file within the scope of the share link. A tool to organise information; it does not diagnose or treat.")

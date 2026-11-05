@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { appliesToSex, forSex } from "@/lib/sex";
 import Link from "next/link";
+import { Printer } from "lucide-react";
 import { i18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/server";
 import { getPatient, getSpecialties, specialtyName, UUID_RE } from "@/lib/data";
@@ -37,7 +38,15 @@ export default async function VisitPage({ params }: { params: { pid: string; eid
       <PageHead
         title={`${lbl(ENCOUNTER_KIND, e.kind, lang)}${e.reason ? ` — ${e.reason}` : ""}`}
         sub={`${fmtDateTime(e.started_at, lang, tz)}${e.practitioner_name ? ` · ${e.practitioner_name}` : ""}${e.facility_name ? ` · ${e.facility_name}` : ""}${e.specialty_id ? ` · ${specialtyName(specs, e.specialty_id, lang)}` : ""}`}
-        actions={<Link className="btn" href={`/patients/${p.id}/visits`}>{t("كل الزيارات", "All visits")}</Link>}
+        actions={
+          <span className="row" style={{ gap: ".5rem" }}>
+            <a className="btn sm" href={`/api/patients/${p.id}/visits/${e.id}/pdf`} target="_blank" rel="noopener">
+              <Printer size={14} aria-hidden="true" />
+              {t("تقرير الزيارة (PDF)", "Visit note (PDF)")}
+            </a>
+            <Link className="btn sm" href={`/patients/${p.id}/visits`}>{t("كل الزيارات", "All visits")}</Link>
+          </span>
+        }
       />
       <Card title={t("تفاصيل الزيارة", "Visit details")}>
         <KV items={[
